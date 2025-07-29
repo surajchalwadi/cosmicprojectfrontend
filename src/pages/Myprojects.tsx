@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/config/environment";
 import {
   Card,
   CardHeader,
@@ -80,7 +81,7 @@ const MyProjectsPage = () => {
     };
 
     // Fetch manager's assigned projects (correct port)
-    fetch("http://localhost:5000/api/manager/projects", { headers })
+    fetch(`${API_BASE_URL}/manager/projects`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -90,7 +91,7 @@ const MyProjectsPage = () => {
       .catch(console.error);
 
     // Fetch reports
-    fetch("http://localhost:5000/api/reports/overview", { headers })
+    fetch(`${API_BASE_URL}/reports/overview`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {

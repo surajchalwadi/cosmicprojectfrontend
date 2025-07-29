@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatsCards from "@/components/dashboard/StatsCards";
+import { API_BASE_URL, FILE_BASE_URL } from "@/config/environment";
 
 import {
   Card,
@@ -118,7 +119,7 @@ const ManagerDashboard = () => {
   const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
-    const res = await fetch("http://localhost:5000/api/profile", { headers });
+    const res = await fetch(`${API_BASE_URL}/profile`, { headers });
     const data = await res.json();
     if (data.status === "success") {
       setUserProfile(data.data);
@@ -129,7 +130,7 @@ const ManagerDashboard = () => {
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("profilePicture", file);
-    await fetch("http://localhost:5000/api/profile/picture", {
+          await fetch(`${API_BASE_URL}/profile/picture`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -149,7 +150,7 @@ const ManagerDashboard = () => {
     fetchUserProfile();
 
     // Fetch manager's assigned projects
-    fetch("http://localhost:5000/api/manager/projects", { headers })
+            fetch(`${API_BASE_URL}/manager/projects`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -159,7 +160,7 @@ const ManagerDashboard = () => {
       .catch(console.error);
 
     // Fetch technicians
-    fetch("http://localhost:5000/api/manager/technicians", { headers })
+            fetch(`${API_BASE_URL}/manager/technicians`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -169,7 +170,7 @@ const ManagerDashboard = () => {
       .catch(console.error);
 
     // Fetch manager stats
-    fetch("http://localhost:5000/api/manager/stats", { headers })
+            fetch(`${API_BASE_URL}/manager/stats`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -217,7 +218,7 @@ const ManagerDashboard = () => {
       }
       // Re-fetch tasks from backend and update state
       const token = localStorage.getItem("token");
-      fetch("http://localhost:5000/api/manager/tasks", {
+      fetch(`${API_BASE_URL}/manager/tasks`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -232,7 +233,7 @@ const ManagerDashboard = () => {
         })
         .catch(console.error);
       // Re-fetch manager stats from backend
-      fetch("http://localhost:5000/api/manager/stats", {
+      fetch(`${API_BASE_URL}/manager/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
@@ -261,7 +262,7 @@ const ManagerDashboard = () => {
       console.error("[FRONTEND DEBUG] No token found");
       return;
     }
-    fetch("http://localhost:5000/api/manager/tasks", {
+    fetch(`${API_BASE_URL}/manager/tasks`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -331,7 +332,7 @@ const ManagerDashboard = () => {
         formData.append("projectFiles", filePath);
       });
 
-      const response = await fetch("http://localhost:5000/api/manager/tasks", {
+      const response = await fetch(`${API_BASE_URL}/manager/tasks`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -344,7 +345,7 @@ const ManagerDashboard = () => {
       if (data.status === "success") {
         // Refresh the tasks list
         const tasksResponse = await fetch(
-          "http://localhost:5000/api/manager/tasks",
+          `${API_BASE_URL}/manager/tasks`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -466,7 +467,7 @@ const ManagerDashboard = () => {
       return;
     }
     try {
-      const response = await fetch("http://localhost:5000/api/reports/task-pdf", {
+      const response = await fetch(`${API_BASE_URL}/reports/task-pdf`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -496,7 +497,7 @@ const ManagerDashboard = () => {
       userRole="manager"
       userName={userProfile?.name || "Project Manager"}
       userEmail={userProfile?.email || "manager@cosmicsolutions.com"}
-      userProfilePicture={userProfile?.profilePicture ? `http://localhost:5000/${userProfile.profilePicture}` : undefined}
+              userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
       onProfilePictureUpload={handleProfilePictureUpload}
     >
       <div className="mobile-container mobile-space-y max-w-7xl mx-auto">
@@ -630,7 +631,7 @@ const ManagerDashboard = () => {
                                 const newStatus = e.target.value;
                                 try {
                                   const token = localStorage.getItem("token");
-                                  const response = await fetch(`http://localhost:5000/api/projects/${project._id}/status`, {
+                                  const response = await fetch(`${API_BASE_URL}/projects/${project._id}/status`, {
                                     method: "PATCH",
                                     headers: {
                                       "Content-Type": "application/json",
@@ -668,7 +669,7 @@ const ManagerDashboard = () => {
                               {project.files.map((file, idx) => (
                                 <li key={idx}>
                                   <a
-                                    href={`http://localhost:5000/${file.path.replace(/\\/g, '/')}`}
+                                    href={`${FILE_BASE_URL}/${file.path.replace(/\\/g, '/')}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-600 underline hover:text-blue-800"
@@ -762,7 +763,7 @@ const ManagerDashboard = () => {
                                     {task.project.files.map((file, idx) => (
                                       <li key={idx}>
                                         <a
-                                          href={`http://localhost:5000/${file.path}`}
+                                          href={`${FILE_BASE_URL}/${file.path}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-xs text-blue-600 hover:text-blue-800 underline font-medium"
@@ -1171,7 +1172,7 @@ const ManagerDashboard = () => {
                                     {task.files.map((file, idx) => (
                                       <li key={idx}>
                                         <a 
-                                          href={file.url || `http://localhost:5000/${file.path}`} 
+                                          href={file.url || `${FILE_BASE_URL}/${file.path}`} 
                                           target="_blank" 
                                           rel="noopener noreferrer"
                                           className="text-blue-600 hover:text-blue-800 underline text-xs"
@@ -1240,7 +1241,7 @@ const ManagerDashboard = () => {
                                     {task.files.map((file, idx) => (
                                       <div key={idx}>
                                         <a 
-                                          href={file.url || `http://localhost:5000/${file.path}`} 
+                                          href={file.url || `${FILE_BASE_URL}/${file.path}`} 
                                           target="_blank" 
                                           rel="noopener noreferrer"
                                           className="mobile-text-xs text-blue-600 hover:text-blue-800 underline break-all"

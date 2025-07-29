@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatsCards from "@/components/dashboard/StatsCards";
+import { API_BASE_URL, FILE_BASE_URL } from "@/config/environment";
 import {
   Card,
   CardContent,
@@ -104,7 +105,7 @@ const SuperAdminDashboard = () => {
   const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
-    const res = await fetch("http://localhost:5000/api/profile", { headers });
+    const res = await fetch(`${API_BASE_URL}/profile`, { headers });
     const data = await res.json();
     if (data.status === "success") {
       setUserProfile(data.data);
@@ -115,7 +116,7 @@ const SuperAdminDashboard = () => {
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("profilePicture", file);
-    await fetch("http://localhost:5000/api/profile/picture", {
+          await fetch(`${API_BASE_URL}/profile/picture`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -142,7 +143,7 @@ const SuperAdminDashboard = () => {
     //   })
     //   .catch(console.error);
 
-    fetch("http://localhost:5000/api/superadmin/stats", { headers })
+          fetch(`${API_BASE_URL}/superadmin/stats`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -151,7 +152,7 @@ const SuperAdminDashboard = () => {
       })
       .catch(console.error);
 
-    fetch("http://localhost:5000/api/superadmin/projects", { headers })
+          fetch(`${API_BASE_URL}/superadmin/projects`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -160,7 +161,7 @@ const SuperAdminDashboard = () => {
       })
       .catch(console.error);
 
-    fetch("http://localhost:5000/api/superadmin/managers", { headers })
+          fetch(`${API_BASE_URL}/superadmin/managers`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -169,7 +170,7 @@ const SuperAdminDashboard = () => {
       })
       .catch(console.error);
 
-    fetch("http://localhost:5000/api/reports/overview", { headers })
+          fetch(`${API_BASE_URL}/reports/overview`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -207,7 +208,7 @@ const SuperAdminDashboard = () => {
       }
       // Re-fetch projects from backend
       const token = localStorage.getItem("token");
-      fetch("http://localhost:5000/api/superadmin/projects", {
+      fetch(`${API_BASE_URL}/superadmin/projects`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -220,7 +221,7 @@ const SuperAdminDashboard = () => {
         })
         .catch(console.error);
       // Re-fetch stats from backend
-      fetch("http://localhost:5000/api/superadmin/stats", {
+      fetch(`${API_BASE_URL}/superadmin/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
@@ -277,7 +278,7 @@ const SuperAdminDashboard = () => {
           formData.append(key, value as string);
         }
       });
-      res = await fetch("http://localhost:5000/api/superadmin/projects", {
+      res = await fetch(`${API_BASE_URL}/superadmin/projects`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -286,7 +287,7 @@ const SuperAdminDashboard = () => {
       });
     } else {
       // No files, send JSON
-      res = await fetch("http://localhost:5000/api/superadmin/projects", {
+      res = await fetch(`${API_BASE_URL}/superadmin/projects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -372,7 +373,7 @@ const SuperAdminDashboard = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5000/api/users", {
+          fetch(`${API_BASE_URL}/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -394,7 +395,7 @@ const SuperAdminDashboard = () => {
     const selectedTask = projects.flatMap((project) => project.tasks || []).find((t) => (t._id || t.id) === selectedReportTaskId);
     if (!selectedTask) return;
     try {
-      const response = await fetch("http://localhost:5000/api/reports/task-pdf", {
+      const response = await fetch(`${API_BASE_URL}/reports/task-pdf`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -422,7 +423,7 @@ const SuperAdminDashboard = () => {
       userRole="superadmin"
       userName={userProfile?.name || "System Administrator"}
       userEmail={userProfile?.email || "admin@cosmicsolutions.com"}
-      userProfilePicture={userProfile?.profilePicture ? `http://localhost:5000/${userProfile.profilePicture}` : undefined}
+              userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
       onProfilePictureUpload={handleProfilePictureUpload}
     >
       <div className="mobile-container mobile-space-y max-w-7xl mx-auto">
@@ -1034,7 +1035,7 @@ const SuperAdminDashboard = () => {
                                       {task.files.map((file, idx) => (
                                         <li key={idx}>
                                           <a 
-                                            href={file.url || `http://localhost:5000/${file.path}`} 
+                                            href={file.url || `${FILE_BASE_URL}/${file.path}`} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             className="text-blue-600 hover:text-blue-800 underline text-xs"
@@ -1105,7 +1106,7 @@ const SuperAdminDashboard = () => {
                                       {task.files.map((file, idx) => (
                                         <div key={idx}>
                                           <a 
-                                            href={file.url || `http://localhost:5000/${file.path}`} 
+                                            href={file.url || `${FILE_BASE_URL}/${file.path}`} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             className="mobile-text-xs text-blue-600 hover:text-blue-800 underline break-all"
