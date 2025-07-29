@@ -15,9 +15,18 @@ export default async function handler(req, res) {
     const { method, headers, body } = req;
     const backendUrl = 'https://cosmicproject-backend-1.onrender.com';
     
-    // Remove the /api prefix from the path
-    const path = req.url.replace('/api/proxy', '');
-    const targetUrl = `${backendUrl}${path}`;
+    // Get the path from the query or URL
+    let path = '';
+    if (req.query.path) {
+      path = `/${req.query.path}`;
+    } else {
+      // Remove the /api/proxy prefix from the URL
+      path = req.url.replace('/api/proxy', '');
+    }
+    
+    const targetUrl = `${backendUrl}/api${path}`;
+
+    console.log(`Proxying request to: ${targetUrl}`);
 
     // Forward the request to the backend
     const response = await fetch(targetUrl, {
