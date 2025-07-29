@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { API_BASE_URL, FILE_BASE_URL } from "@/config/environment";
 import {
   Card,
   CardContent,
@@ -74,7 +75,7 @@ const SuperAdminReports = () => {
       console.log("Generating report:", reportData);
       
       // Use the correct endpoint for project summary report
-      const response = await fetch("http://localhost:5000/api/reports/generate", {
+      const response = await fetch(`${API_BASE_URL}/reports/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -141,7 +142,7 @@ const SuperAdminReports = () => {
     const token = localStorage.getItem("token");
     
     // Fetch user profile
-    fetch("http://localhost:5000/api/profile", {
+          fetch(`${API_BASE_URL}/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -152,7 +153,7 @@ const SuperAdminReports = () => {
       })
       .catch(console.error);
 
-    fetch("http://localhost:5000/api/superadmin/stats", {
+          fetch(`${API_BASE_URL}/superadmin/stats`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -182,7 +183,7 @@ const SuperAdminReports = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    fetch("http://localhost:5000/api/superadmin/projects", {
+          fetch(`${API_BASE_URL}/superadmin/projects`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -206,7 +207,7 @@ const SuperAdminReports = () => {
     const token = localStorage.getItem("token");
     const selectedTask = allTasks.find((t) => t._id === selectedReportTaskId || t.id === selectedReportTaskId);
     try {
-      const response = await fetch("http://localhost:5000/api/reports/task-pdf", {
+      const response = await fetch(`${API_BASE_URL}/reports/task-pdf`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -236,7 +237,7 @@ const SuperAdminReports = () => {
       userRole="super-admin"
       userName={userProfile?.name || "System Administrator"}
       userEmail={userProfile?.email || "admin@cosmicsolutions.com"}
-      userProfilePicture={userProfile?.profilePicture ? `http://localhost:5000/${userProfile.profilePicture}` : undefined}
+              userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
     >
       <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
         {/* Header */}

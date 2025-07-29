@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { API_BASE_URL, FILE_BASE_URL } from "@/config/environment";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("profilePicture", file);
-      const response = await fetch("http://localhost:5000/api/profile/picture", {
+      const response = await fetch(`${API_BASE_URL}/profile/picture`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -67,7 +68,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       });
       const data = await response.json();
       if (data.status === "success") {
-        setProfilePicture(`http://localhost:5000/${data.data.profilePicture}`);
+        setProfilePicture(`${FILE_BASE_URL}/${data.data.profilePicture}`);
       } else {
         throw new Error(data.message || "Failed to upload profile picture");
       }

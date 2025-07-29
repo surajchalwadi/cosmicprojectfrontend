@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { API_BASE_URL, FILE_BASE_URL } from "@/config/environment";
 import { Search, Plus, Eye, Calendar, AlertCircle, Clock, Building, User, X } from 'lucide-react';
 import { useSocket } from '@/contexts/SocketContext';
 
@@ -40,7 +41,7 @@ const TasksPage = () => {
   const fetchTasks = async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const res = await fetch('http://localhost:5000/api/manager/tasks', {
+    const res = await fetch(`${API_BASE_URL}/manager/tasks`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -64,7 +65,7 @@ const TasksPage = () => {
     const token = localStorage.getItem('token');
     
     // Fetch user profile
-    fetch("http://localhost:5000/api/profile", {
+          fetch(`${API_BASE_URL}/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -162,7 +163,7 @@ const TasksPage = () => {
       userRole="manager"
       userName={userProfile?.name || "Project Manager"}
       userEmail={userProfile?.email || "manager@cosmicsolutions.com"}
-      userProfilePicture={userProfile?.profilePicture ? `http://localhost:5000/${userProfile.profilePicture}` : undefined}
+              userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
     >
       <div className="p-4 lg:p-6 max-w-7xl mx-auto">
         {/* Page Description */}

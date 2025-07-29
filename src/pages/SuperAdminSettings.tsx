@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { API_BASE_URL } from "@/config/environment";
 import {
   Card,
   CardContent,
@@ -65,7 +66,7 @@ const SuperAdminSettings = () => {
     setLoading(true);
     try {
       // Fetch managers
-      const managersRes = await fetch("http://localhost:5000/api/superadmin/managers", {
+      const managersRes = await fetch(`${API_BASE_URL}/superadmin/managers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (managersRes.ok) {
@@ -79,7 +80,7 @@ const SuperAdminSettings = () => {
         setManagers([]);
       }
       // Fetch technicians
-      const techsRes = await fetch("http://localhost:5000/api/superadmin/technicians", {
+      const techsRes = await fetch(`${API_BASE_URL}/superadmin/technicians`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (techsRes.ok) {
@@ -109,7 +110,7 @@ const SuperAdminSettings = () => {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/users", {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -141,7 +142,7 @@ const SuperAdminSettings = () => {
     if (!token) return;
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
