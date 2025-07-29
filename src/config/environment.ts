@@ -67,8 +67,9 @@ const getCurrentEnvironment = (): EnvironmentConfig => {
     };
   }
   
-  // Otherwise use environment detection
-  return isProductionEnv() ? productionConfig : developmentConfig;
+  // For now, always use production config since backend is deployed on Render
+  // This ensures the frontend connects to the deployed backend even when running locally
+  return productionConfig;
 };
 
 // Export current environment config
@@ -92,7 +93,9 @@ console.log('🌍 Environment Configuration:', {
   NODE_ENV,
   MODE: import.meta.env?.MODE,
   VITE_API_BASE_URL: import.meta.env?.VITE_API_BASE_URL,
-  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server'
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+  isProduction: isProductionEnv(),
+  isDevelopment: !isProductionEnv()
 });
 
 export default env;
