@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, ReactNode } from "react";
+import { API_BASE_URL } from "@/config/environment";
 
 export interface User {
   id: string;
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         // Verify token with backend
-        const response = await fetch(`http://localhost:5000/api/auth/me`, {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -125,7 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+              const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -166,7 +167,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const token = localStorage.getItem("token");
       if (token) {
         // Try to logout on backend, but don't fail if it doesn't work
-        await fetch("http://localhost:5000/api/auth/logout", {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
