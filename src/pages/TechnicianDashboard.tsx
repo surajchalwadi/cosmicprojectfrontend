@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatsCards from "@/components/dashboard/StatsCards";
+import { API_BASE_URL, FILE_BASE_URL } from "@/config/environment";
 import {
   Card,
   CardContent,
@@ -105,7 +106,7 @@ const TechnicianDashboard = () => {
   const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
-    const res = await fetch("http://localhost:5000/api/profile", { headers });
+    const res = await fetch(`${API_BASE_URL}/profile`, { headers });
     const data = await res.json();
     if (data.status === "success") {
       setUserProfile(data.data);
@@ -116,7 +117,7 @@ const TechnicianDashboard = () => {
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("profilePicture", file);
-    await fetch("http://localhost:5000/api/profile/picture", {
+          await fetch(`${API_BASE_URL}/profile/picture`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -134,7 +135,7 @@ const TechnicianDashboard = () => {
     };
 
     // Fetch technician's assigned tasks
-    fetch("http://localhost:5000/api/technician/tasks", { headers })
+          fetch(`${API_BASE_URL}/technician/tasks`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -286,7 +287,7 @@ const TechnicianDashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/api/technician/tasks/${selectedTask.id}/status`,
+        `${API_BASE_URL}/technician/tasks/${selectedTask.id}/status`,
         {
           method: "PUT",
           headers: {
@@ -307,7 +308,7 @@ const TechnicianDashboard = () => {
       if (data.status === "success") {
         // Refresh the tasks list
         const tasksResponse = await fetch(
-          "http://localhost:5000/api/technician/tasks",
+          `${API_BASE_URL}/technician/tasks`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -352,7 +353,7 @@ const TechnicianDashboard = () => {
       userRole="technician"
       userName={userProfile?.name || "Technician"}
       userEmail={userProfile?.email || "technician@cosmicsolutions.com"}
-      userProfilePicture={userProfile?.profilePicture ? `http://localhost:5000/${userProfile.profilePicture}` : undefined}
+              userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
       onProfilePictureUpload={handleProfilePictureUpload}
     >
       <div className="mobile-container mobile-space-y max-w-7xl mx-auto">
@@ -630,7 +631,7 @@ const TechnicianDashboard = () => {
                                   </div>
                                 </div>
                                 <a
-                                  href={file.url || `http://localhost:5000/${file.path}`}
+                                  href={file.url || `${FILE_BASE_URL}/${file.path}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
@@ -664,7 +665,7 @@ const TechnicianDashboard = () => {
                                   </div>
                                 </div>
                                 <a
-                                  href={file.url || `http://localhost:5000/${file.path}`}
+                                  href={file.url || `${FILE_BASE_URL}/${file.path}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
