@@ -37,7 +37,7 @@ const isProductionEnv = (): boolean => {
 
 // Production environment (Vercel + Render)
 const productionConfig: EnvironmentConfig = {
-  API_BASE_URL: 'https://cosmicproject-backend-1.onrender.com/api',
+  API_BASE_URL: '/api/proxy',
   SOCKET_URL: 'https://cosmicproject-backend-1.onrender.com',
   FILE_BASE_URL: 'https://cosmicproject-backend-1.onrender.com',
   NODE_ENV: 'production'
