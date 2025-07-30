@@ -35,144 +35,85 @@ const SocketContext = createContext<SocketContextValue>({
 
 export const useSocket = () => useContext(SocketContext);
 
-export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+class NotificationClient {
+  private socket: Socket | null = null;
+  private isConnected = false;
+  private setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+  private setUnreadCount: React.Dispatch<React.SetStateAction<number>>;
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    
-    if (!token) {
-      return;
-    }
+  constructor(
+    setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>,
+    setUnreadCount: React.Dispatch<React.SetStateAction<number>>
+  ) {
+    this.setNotifications = setNotifications;
+    this.setUnreadCount = setUnreadCount;
+  }
 
-    const currentUserStr = sessionStorage.getItem("currentUser");
-    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
-
-    const s = io(SOCKET_URL, {
-      auth: { 
-        token,
-        userId: currentUser?._id,
-        userRole: currentUser?.role
-      },
-      transports: ["websocket"],
-      withCredentials: true,
+  connect(token: string) {
+    this.socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+      timeout: 20000
     });
 
-    s.on("connect", () => {
+    this.socket.on('connect', () => {
+      console.log('✅ Connected to notifications');
+      this.isConnected = true;
       toast.success("Connected to real-time updates");
-      setSocket(s);
     });
 
-    s.on("disconnect", () => {
+    this.socket.on('disconnect', () => {
+      console.log('❌ Disconnected from notifications');
+      this.isConnected = false;
       toast.error("Lost connection to real-time updates");
     });
 
-    s.on("notification:new", (notification: Notification) => {
-      const newNotification = { ...notification, isRead: false };
-      setNotifications(prev => [newNotification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-
-      switch (notification.type) {
-        case 'success':
-          toast.success(notification.message, {
-            duration: 5000,
-            icon: '✅',
-          });
-          break;
-        case 'error':
-          toast.error(notification.message, {
-            duration: 6000,
-            icon: '❌',
-          });
-          break;
-        case 'warning':
-          toast(notification.message, {
-            duration: 5000,
-            icon: '⚠️',
-            style: {
-              background: '#fbbf24',
-              color: '#1f2937',
-            },
-          });
-          break;
-        case 'info':
-          toast(notification.message, {
-            duration: 4000,
-            icon: 'ℹ️',
-          });
-          break;
-        default:
-          toast(notification.message, {
-            duration: 4000,
-            icon: '📢',
-          });
-      }
+    this.socket.on('notification:new', (notification: Notification) => {
+      console.log('🔔 New notification:', notification);
+      this.handleNewNotification(notification);
     });
 
-    s.on("task:assigned", (data: any) => {
-      toast.success(`Task "${data.task.title}" assigned to you`, {
-        duration: 5000,
-        icon: '📋',
-      });
-      
-      const notification: Notification = {
-        id: `task-assigned-${Date.now()}`,
-        title: "New Task Assigned",
-        message: `You have been assigned a new task: "${data.task.title}"`,
-        type: 'info',
-        priority: data.task.priority || 'medium',
-        category: 'task',
-        metadata: {
-          taskId: data.task._id,
-          projectId: data.project?._id,
-          technicianId: data.technician?._id
-        },
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
-      
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
+    this.socket.on('task:assigned', (data: any) => {
+      console.log('📋 Task assigned:', data);
+      this.handleTaskAssigned(data);
     });
 
-    s.on("task:completed", (data: any) => {
+    this.socket.on('task:completed', (data: any) => {
       toast.success(`Task "${data.task.title}" completed successfully`, {
         duration: 4000,
         icon: '✅',
       });
     });
 
-    s.on("task:overdue", (data: any) => {
+    this.socket.on('task:overdue', (data: any) => {
       toast.error(`Task "${data.task.title}" is overdue!`, {
         duration: 8000,
         icon: '⏰',
       });
     });
 
-    s.on("project:created", (data: any) => {
+    this.socket.on('project:created', (data: any) => {
       toast.success(`New project "${data.project.siteName}" created`, {
         duration: 4000,
         icon: '🏗️',
       });
     });
 
-    s.on("project:updated", (data: any) => {
+    this.socket.on('project:updated', (data: any) => {
       toast(`Project "${data.project.siteName}" updated`, {
         duration: 4000,
         icon: '📝',
       });
     });
 
-    s.on("user:login", (data: any) => {
+    this.socket.on('user:login', (data: any) => {
       toast(`${data.user.name} logged in`, {
         duration: 3000,
         icon: '👤',
       });
     });
 
-    s.on("system:maintenance", (data: any) => {
+    this.socket.on('system:maintenance', (data: any) => {
       toast(data.message, {
         duration: 8000,
         icon: '🔧',
@@ -183,15 +124,119 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     });
 
-    s.on("system:alert", (data: any) => {
+    this.socket.on('system:alert', (data: any) => {
       toast.error(data.message, {
         duration: 10000,
         icon: '🚨',
       });
     });
+  }
+
+  private handleNewNotification(notification: Notification) {
+    const newNotification = { ...notification, isRead: false };
+    this.setNotifications(prev => [newNotification, ...prev]);
+    this.setUnreadCount(prev => prev + 1);
+
+    switch (notification.type) {
+      case 'success':
+        toast.success(notification.message, {
+          duration: 5000,
+          icon: '✅',
+        });
+        break;
+      case 'error':
+        toast.error(notification.message, {
+          duration: 6000,
+          icon: '❌',
+        });
+        break;
+      case 'warning':
+        toast(notification.message, {
+          duration: 5000,
+          icon: '⚠️',
+          style: {
+            background: '#fbbf24',
+            color: '#1f2937',
+          },
+        });
+        break;
+      case 'info':
+        toast(notification.message, {
+          duration: 4000,
+          icon: 'ℹ️',
+        });
+        break;
+      default:
+        toast(notification.message, {
+          duration: 4000,
+          icon: '📢',
+        });
+    }
+  }
+
+  private handleTaskAssigned(data: any) {
+    toast.success(`Task "${data.task.title}" assigned to you`, {
+      duration: 5000,
+      icon: '📋',
+    });
+    
+    const notification: Notification = {
+      id: `task-assigned-${Date.now()}`,
+      title: "New Task Assigned",
+      message: `You have been assigned a new task: "${data.task.title}"`,
+      type: 'info',
+      priority: data.task.priority || 'medium',
+      category: 'task',
+      metadata: {
+        taskId: data.task._id,
+        projectId: data.project?._id,
+        technicianId: data.technician?._id
+      },
+      createdAt: new Date().toISOString(),
+      isRead: false
+    };
+    
+    this.setNotifications(prev => [notification, ...prev]);
+    this.setUnreadCount(prev => prev + 1);
+  }
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.isConnected = false;
+    }
+  }
+
+  getSocket() {
+    return this.socket;
+  }
+
+  isSocketConnected() {
+    return this.isConnected;
+  }
+}
+
+export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationClient, setNotificationClient] = useState<NotificationClient | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      return;
+    }
+
+    const client = new NotificationClient(setNotifications, setUnreadCount);
+    client.connect(token);
+    setNotificationClient(client);
+    setSocket(client.getSocket());
 
     return () => {
-      s.disconnect();
+      client.disconnect();
     };
   }, []);
 
