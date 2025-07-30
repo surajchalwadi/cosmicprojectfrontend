@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Frontend for Cosmic Solutions Site Engineer & CCTV Management System",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -49,13 +53,12 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^24.0.14",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.3",
-    "@vitejs/plugin-react-swc": "^3.10.2",
     "autoprefixer": "^10.4.14",
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -64,7 +67,18 @@
     "prettier": "^3.5.3",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.0.2",
-    "vite": "^7.0.6",
+    "vite": "^4.4.0",
     "vitest": "^3.1.4"
+  },
+  "overrides": {
+    "rollup": {
+      "optionalDependencies": {
+        "@rollup/rollup-linux-x64-gnu": "4.6.0",
+        "@rollup/rollup-linux-x64-musl": "4.6.0",
+        "@rollup/rollup-darwin-x64": "4.6.0",
+        "@rollup/rollup-darwin-arm64": "4.6.0",
+        "@rollup/rollup-win32-x64-msvc": "4.6.0"
+      }
+    }
   }
 }
