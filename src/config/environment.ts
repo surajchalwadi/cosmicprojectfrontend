@@ -46,9 +46,9 @@ const productionConfig: EnvironmentConfig = {
 
 // Development environment (localhost)
 const developmentConfig: EnvironmentConfig = {
-  API_BASE_URL: 'http://localhost:5000/api',
-  SOCKET_URL: 'http://localhost:5000',
-  FILE_BASE_URL: 'http://localhost:5000',
+  API_BASE_URL: getEnvVar('VITE_API_BASE_URL', 'https://cosmicproject-backend-1.onrender.com/api'),
+  SOCKET_URL: getEnvVar('VITE_SOCKET_URL', 'https://cosmicproject-backend-1.onrender.com'),
+  FILE_BASE_URL: getEnvVar('VITE_FILE_BASE_URL', 'https://cosmicproject-backend-1.onrender.com'),
   NODE_ENV: 'development'
 };
 
