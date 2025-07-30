@@ -12,24 +12,29 @@ interface Notification {
   category: 'general' | 'security' | 'system' | 'task' | 'maintenance';
   metadata?: any;
   createdAt: string;
+  isRead?: boolean;
 }
 
 interface SocketContextValue {
   socket: Socket | null;
   notifications: Notification[];
   unreadCount: number;
+  isConnected: boolean;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
+  loadNotificationsFromAPI: () => void;
 }
 
 const SocketContext = createContext<SocketContextValue>({ 
   socket: null, 
   notifications: [], 
   unreadCount: 0,
+  isConnected: false,
   markAsRead: () => {},
   markAllAsRead: () => {},
-  clearNotifications: () => {}
+  clearNotifications: () => {},
+  loadNotificationsFromAPI: () => {}
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -38,34 +43,61 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [socket, setSocket] = useState<Socket | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      console.log("No token found, skipping socket connection");
+      return;
+    }
 
+    console.log("Attempting to connect to socket at:", SOCKET_URL);
+    
     const s = io(SOCKET_URL, {
       auth: { token },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
       withCredentials: true,
+      timeout: 10000,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     // Socket connection events
     s.on("connect", () => {
-      console.log("Connected to server");
+      console.log("✅ Connected to server successfully");
+      setIsConnected(true);
       toast.success("Connected to real-time updates");
     });
 
-    s.on("disconnect", () => {
-      console.log("Disconnected from server");
+    s.on("disconnect", (reason) => {
+      console.log("❌ Disconnected from server:", reason);
+      setIsConnected(false);
       toast.error("Lost connection to real-time updates");
+    });
+
+    s.on("connect_error", (error) => {
+      console.error("🔴 Socket connection error:", error);
+      toast.error("Failed to connect to real-time updates");
+    });
+
+    s.on("reconnect", (attemptNumber) => {
+      console.log("🔄 Reconnected to server after", attemptNumber, "attempts");
+      toast.success("Reconnected to real-time updates");
+    });
+
+    s.on("reconnect_error", (error) => {
+      console.error("🔴 Socket reconnection error:", error);
     });
 
     // Real-time notification events
     s.on("notification:new", (notification: Notification) => {
       console.log("New notification received:", notification);
       
-      // Add to notifications list
-      setNotifications(prev => [notification, ...prev]);
+      // Add to notifications list with isRead property
+      const newNotification = { ...notification, isRead: false };
+      setNotifications(prev => [newNotification, ...prev]);
       setUnreadCount(prev => prev + 1);
 
       // Show toast notification based on type
@@ -205,6 +237,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
+  // Load notifications from API on mount
+  useEffect(() => {
+    loadNotificationsFromAPI();
+  }, []);
+
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {
     try {
@@ -255,6 +292,34 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  // Load notifications from API as fallback
+  const loadNotificationsFromAPI = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/notifications`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success' && data.data) {
+          setNotifications(data.data.map((notif: any) => ({
+            ...notif,
+            isRead: notif.isRead || false
+          })));
+          setUnreadCount(data.data.filter((n: any) => !n.isRead).length);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading notifications from API:', error);
+    }
+  };
+
   // Clear all notifications
   const clearNotifications = () => {
     setNotifications([]);
@@ -266,9 +331,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       socket, 
       notifications, 
       unreadCount,
+      isConnected,
       markAsRead,
       markAllAsRead,
-      clearNotifications
+      clearNotifications,
+      loadNotificationsFromAPI
     }}>
       {children}
     </SocketContext.Provider>
