@@ -103,6 +103,35 @@ const TechnicianDashboard = () => {
 
   const { socket, testSocketConnection } = useSocket();
 
+  // Poll for notifications every 30 seconds as backup to socket events
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/notifications`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const notifications = await response.json();
+          console.log("TechnicianDashboard - Fetched notifications via API:", notifications);
+        }
+      } catch (error) {
+        console.log("TechnicianDashboard - Error fetching notifications:", error);
+      }
+    };
+
+    // Fetch immediately
+    fetchNotifications();
+    
+    // Then poll every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };

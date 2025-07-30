@@ -407,6 +407,40 @@ const ManagerDashboard = () => {
           // Also emit a test event to verify socket communication
           socket.emit('test:broadcast', { message: 'Test broadcast from manager', timestamp: Date.now() });
           console.log("ManagerDashboard - Test broadcast event also emitted");
+          
+          // Backup: Create notification via API call
+          try {
+            const notificationData = {
+              title: "New Task Assigned",
+              message: `You have been assigned a new task: "${taskTitle}"`,
+              type: 'info',
+              priority: taskPriority || 'medium',
+              category: 'task',
+              metadata: {
+                taskId: data.task._id,
+                projectId: selectedProject,
+                technicianId: selectedTechnician
+              },
+              recipientId: selectedTechnician
+            };
+            
+            const notificationResponse = await fetch(`${API_BASE_URL}/notifications`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(notificationData),
+            });
+            
+            if (notificationResponse.ok) {
+              console.log("ManagerDashboard - Notification created via API");
+            } else {
+              console.log("ManagerDashboard - Failed to create notification via API");
+            }
+          } catch (error) {
+            console.log("ManagerDashboard - Error creating notification via API:", error);
+          }
         } else {
           console.log("Socket not available for task assignment notification");
         }
