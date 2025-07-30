@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-<<<<<<< HEAD
-=======
 import { API_BASE_URL } from "@/config/environment";
->>>>>>> origin/master
 import { getUsersByRole } from "@/utils/userCredentials";
 import {
   Card,
@@ -76,11 +73,7 @@ const ManagerTechniciansPage = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-<<<<<<< HEAD
-    fetch("https://cosmicproject-backend-1.onrender.com/api/manager/technicians", {
-=======
-          fetch(`${API_BASE_URL}/manager/technicians`, {
->>>>>>> origin/master
+    fetch(`${API_BASE_URL}/manager/technicians`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,

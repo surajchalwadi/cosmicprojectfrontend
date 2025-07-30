@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatsCards from "@/components/dashboard/StatsCards";
-<<<<<<< HEAD
-=======
 import { API_BASE_URL, FILE_BASE_URL } from "@/config/environment";
->>>>>>> origin/master
 import {
   Card,
   CardContent,
@@ -109,11 +106,7 @@ const TechnicianDashboard = () => {
   const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
-<<<<<<< HEAD
-    const res = await fetch("https://cosmicproject-backend-1.onrender.com/api/profile", { headers });
-=======
     const res = await fetch(`${API_BASE_URL}/profile`, { headers });
->>>>>>> origin/master
     const data = await res.json();
     if (data.status === "success") {
       setUserProfile(data.data);
@@ -124,11 +117,7 @@ const TechnicianDashboard = () => {
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("profilePicture", file);
-<<<<<<< HEAD
-    await fetch("https://cosmicproject-backend-1.onrender.com/api/profile/picture", {
-=======
-          await fetch(`${API_BASE_URL}/profile/picture`, {
->>>>>>> origin/master
+    await fetch(`${API_BASE_URL}/profile/picture`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -146,11 +135,7 @@ const TechnicianDashboard = () => {
     };
 
     // Fetch technician's assigned tasks
-<<<<<<< HEAD
-    fetch("https://cosmicproject-backend-1.onrender.com/api/technician/tasks", { headers })
-=======
-          fetch(`${API_BASE_URL}/technician/tasks`, { headers })
->>>>>>> origin/master
+    fetch(`${API_BASE_URL}/technician/tasks`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
@@ -302,11 +287,7 @@ const TechnicianDashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-<<<<<<< HEAD
-        `https://cosmicproject-backend-1.onrender.com/api/technician/tasks/${selectedTask.id}/status`,
-=======
         `${API_BASE_URL}/technician/tasks/${selectedTask.id}/status`,
->>>>>>> origin/master
         {
           method: "PUT",
           headers: {
@@ -327,11 +308,7 @@ const TechnicianDashboard = () => {
       if (data.status === "success") {
         // Refresh the tasks list
         const tasksResponse = await fetch(
-<<<<<<< HEAD
-          "https://cosmicproject-backend-1.onrender.com/api/technician/tasks",
-=======
           `${API_BASE_URL}/technician/tasks`,
->>>>>>> origin/master
           {
             headers: {
               "Content-Type": "application/json",
@@ -376,11 +353,7 @@ const TechnicianDashboard = () => {
       userRole="technician"
       userName={userProfile?.name || "Technician"}
       userEmail={userProfile?.email || "technician@cosmicsolutions.com"}
-<<<<<<< HEAD
-      userProfilePicture={userProfile?.profilePicture ? `https://cosmicproject-backend-1.onrender.com/${userProfile.profilePicture}` : undefined}
-=======
-              userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
->>>>>>> origin/master
+      userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
       onProfilePictureUpload={handleProfilePictureUpload}
     >
       <div className="mobile-container mobile-space-y max-w-7xl mx-auto">
@@ -658,11 +631,7 @@ const TechnicianDashboard = () => {
                                   </div>
                                 </div>
                                 <a
-<<<<<<< HEAD
-                                  href={file.url || `https://cosmicproject-backend-1.onrender.com/${file.path}`}
-=======
                                   href={file.url || `${FILE_BASE_URL}/${file.path}`}
->>>>>>> origin/master
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
@@ -696,11 +665,7 @@ const TechnicianDashboard = () => {
                                   </div>
                                 </div>
                                 <a
-<<<<<<< HEAD
-                                  href={file.url || `https://cosmicproject-backend-1.onrender.com/${file.path}`}
-=======
                                   href={file.url || `${FILE_BASE_URL}/${file.path}`}
->>>>>>> origin/master
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"

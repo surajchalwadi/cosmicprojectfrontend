@@ -1,9 +1,5 @@
 import React, { useState, useEffect, createContext, ReactNode } from "react";
-<<<<<<< HEAD
-import { authAPI } from "@/utils/api";
-=======
 import { API_BASE_URL } from "@/config/environment";
->>>>>>> origin/master
 
 export interface User {
   id: string;
@@ -69,10 +65,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         // Verify token with backend
-<<<<<<< HEAD
-        try {
-          const data = await authAPI.getCurrentUser();
-=======
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
           method: 'GET',
           headers: {
@@ -83,7 +75,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (response.ok) {
           const data = await response.json();
->>>>>>> origin/master
           
           if (data.status === "success" && data.data?.user) {
             setUser(data.data.user);
@@ -92,17 +83,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           } else {
             throw new Error("Invalid response format");
           }
-<<<<<<< HEAD
-        } catch (error) {
-          // Token might be expired or invalid
-          console.warn(`Auth verification failed:`, error);
-          
-          // Clear auth and try session fallback
-          apiUtils.clearAuth();
-          const sessionUser = apiUtils.getCurrentUserFromSession();
-          if (sessionUser) {
-            setUser(sessionUser);
-=======
         } else {
           // Token might be expired or invalid
           console.warn(`Auth verification failed: ${response.status}`);
@@ -116,7 +96,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           } else {
             throw new Error(`HTTP ${response.status}`);
->>>>>>> origin/master
           }
         }
       } catch (error) {
@@ -147,12 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       
-<<<<<<< HEAD
-      const data = await authAPI.login(email.trim().toLowerCase(), password, role);
-
-      if (data.status === "success") {
-=======
-              const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -167,7 +141,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await response.json();
 
       if (response.ok && data.status === "success") {
->>>>>>> origin/master
         if (data.data?.token && data.data?.user) {
           localStorage.setItem("token", data.data.token);
           setUser(data.data.user);
@@ -194,9 +167,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const token = localStorage.getItem("token");
       if (token) {
         // Try to logout on backend, but don't fail if it doesn't work
-<<<<<<< HEAD
-        await authAPI.logout().catch(error => {
-=======
         await fetch(`${API_BASE_URL}/auth/logout`, {
           method: "POST",
           headers: {
@@ -204,7 +174,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             Authorization: `Bearer ${token}`,
           },
         }).catch(error => {
->>>>>>> origin/master
           console.warn("Backend logout failed:", error);
         });
       }

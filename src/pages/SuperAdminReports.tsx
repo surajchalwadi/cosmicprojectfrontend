@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-<<<<<<< HEAD
-=======
 import { API_BASE_URL, FILE_BASE_URL } from "@/config/environment";
->>>>>>> origin/master
 import {
   Card,
   CardContent,
@@ -78,11 +75,7 @@ const SuperAdminReports = () => {
       console.log("Generating report:", reportData);
       
       // Use the correct endpoint for project summary report
-<<<<<<< HEAD
-      const response = await fetch("https://cosmicproject-backend-1.onrender.com/api/reports/generate", {
-=======
       const response = await fetch(`${API_BASE_URL}/reports/generate`, {
->>>>>>> origin/master
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -149,11 +142,7 @@ const SuperAdminReports = () => {
     const token = localStorage.getItem("token");
     
     // Fetch user profile
-<<<<<<< HEAD
-    fetch("https://cosmicproject-backend-1.onrender.com/api/profile", {
-=======
-          fetch(`${API_BASE_URL}/profile`, {
->>>>>>> origin/master
+    fetch(`${API_BASE_URL}/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -164,11 +153,7 @@ const SuperAdminReports = () => {
       })
       .catch(console.error);
 
-<<<<<<< HEAD
-    fetch("https://cosmicproject-backend-1.onrender.com/api/superadmin/stats", {
-=======
-          fetch(`${API_BASE_URL}/superadmin/stats`, {
->>>>>>> origin/master
+    fetch(`${API_BASE_URL}/superadmin/stats`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -198,11 +183,7 @@ const SuperAdminReports = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-<<<<<<< HEAD
-    fetch("https://cosmicproject-backend-1.onrender.com/api/superadmin/projects", {
-=======
-          fetch(`${API_BASE_URL}/superadmin/projects`, {
->>>>>>> origin/master
+    fetch(`${API_BASE_URL}/superadmin/projects`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -226,11 +207,7 @@ const SuperAdminReports = () => {
     const token = localStorage.getItem("token");
     const selectedTask = allTasks.find((t) => t._id === selectedReportTaskId || t.id === selectedReportTaskId);
     try {
-<<<<<<< HEAD
-      const response = await fetch("https://cosmicproject-backend-1.onrender.com/api/reports/task-pdf", {
-=======
       const response = await fetch(`${API_BASE_URL}/reports/task-pdf`, {
->>>>>>> origin/master
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -260,11 +237,7 @@ const SuperAdminReports = () => {
       userRole="super-admin"
       userName={userProfile?.name || "System Administrator"}
       userEmail={userProfile?.email || "admin@cosmicsolutions.com"}
-<<<<<<< HEAD
-      userProfilePicture={userProfile?.profilePicture ? `https://cosmicproject-backend-1.onrender.com/${userProfile.profilePicture}` : undefined}
-=======
-              userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
->>>>>>> origin/master
+      userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
     >
       <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
         {/* Header */}

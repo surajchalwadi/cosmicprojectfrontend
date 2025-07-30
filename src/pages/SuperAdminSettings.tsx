@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-<<<<<<< HEAD
-=======
 import { API_BASE_URL } from "@/config/environment";
->>>>>>> origin/master
 import {
   Card,
   CardContent,
@@ -69,11 +66,7 @@ const SuperAdminSettings = () => {
     setLoading(true);
     try {
       // Fetch managers
-<<<<<<< HEAD
-      const managersRes = await fetch("https://cosmicproject-backend-1.onrender.com/api/superadmin/managers", {
-=======
       const managersRes = await fetch(`${API_BASE_URL}/superadmin/managers`, {
->>>>>>> origin/master
         headers: { Authorization: `Bearer ${token}` },
       });
       if (managersRes.ok) {
@@ -87,11 +80,7 @@ const SuperAdminSettings = () => {
         setManagers([]);
       }
       // Fetch technicians
-<<<<<<< HEAD
-      const techsRes = await fetch("https://cosmicproject-backend-1.onrender.com/api/superadmin/technicians", {
-=======
       const techsRes = await fetch(`${API_BASE_URL}/superadmin/technicians`, {
->>>>>>> origin/master
         headers: { Authorization: `Bearer ${token}` },
       });
       if (techsRes.ok) {
@@ -121,11 +110,7 @@ const SuperAdminSettings = () => {
     if (!token) return;
     setLoading(true);
     try {
-<<<<<<< HEAD
-      const response = await fetch("https://cosmicproject-backend-1.onrender.com/api/users", {
-=======
       const response = await fetch(`${API_BASE_URL}/users`, {
->>>>>>> origin/master
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -157,11 +142,7 @@ const SuperAdminSettings = () => {
     if (!token) return;
     setLoading(true);
     try {
-<<<<<<< HEAD
-      const response = await fetch(`https://cosmicproject-backend-1.onrender.com/api/users/${id}`, {
-=======
       const response = await fetch(`${API_BASE_URL}/users/${id}`, {
->>>>>>> origin/master
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

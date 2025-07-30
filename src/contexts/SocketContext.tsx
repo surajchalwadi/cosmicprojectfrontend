@@ -12,6 +12,7 @@ interface Notification {
   category: 'general' | 'security' | 'system' | 'task' | 'maintenance';
   metadata?: any;
   createdAt: string;
+  isRead?: boolean;
 }
 
 interface SocketContextValue {
@@ -64,8 +65,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     s.on("notification:new", (notification: Notification) => {
       console.log("New notification received:", notification);
       
-      // Add to notifications list
-      setNotifications(prev => [notification, ...prev]);
+      // Add to notifications list with isRead: false
+      const newNotification = { ...notification, isRead: false };
+      setNotifications(prev => [newNotification, ...prev]);
       setUnreadCount(prev => prev + 1);
 
       // Show toast notification based on type
@@ -101,79 +103,51 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         default:
           toast(notification.message, {
             duration: 4000,
+            icon: '📢',
           });
       }
     });
 
-    // Project updates
+    // Task-related notifications
+    s.on("task:assigned", (data: any) => {
+      toast.success(`Task "${data.task.title}" assigned to you`, {
+        duration: 5000,
+        icon: '📋',
+      });
+    });
+
+    s.on("task:completed", (data: any) => {
+      toast.success(`Task "${data.task.title}" completed successfully`, {
+        duration: 4000,
+        icon: '✅',
+      });
+    });
+
+    s.on("task:overdue", (data: any) => {
+      toast.error(`Task "${data.task.title}" is overdue!`, {
+        duration: 8000,
+        icon: '⏰',
+      });
+    });
+
+    // Project-related notifications
     s.on("project:created", (data: any) => {
-      toast.success(`New project "${data.project.siteName}" created!`, {
+      toast.success(`New project "${data.project.siteName}" created`, {
         duration: 5000,
         icon: '🏗️',
       });
     });
 
     s.on("project:updated", (data: any) => {
-      toast.success(`Project "${data.project.siteName}" updated!`, {
+      toast.info(`Project "${data.project.siteName}" has been updated`, {
         duration: 4000,
         icon: '📝',
       });
     });
 
-    s.on("project:status_changed", (data: any) => {
-      toast(`Project "${data.project.siteName}" status changed to ${data.status}`, {
-        duration: 4000,
-        icon: '🔄',
-      });
-    });
-
-    // Task updates
-    s.on("task:assigned", (data: any) => {
-      toast.success(`New task "${data.task.title}" assigned to you!`, {
-        duration: 5000,
-        icon: '📋',
-      });
-    });
-
-    s.on("task:updated", (data: any) => {
-      toast(`Task "${data.task.title}" updated!`, {
-        duration: 4000,
-        icon: '✏️',
-      });
-    });
-
-    s.on("task:status_changed", (data: any) => {
-      toast(`Task "${data.task.title}" status changed to ${data.status}`, {
-        duration: 4000,
-        icon: '🔄',
-      });
-    });
-
-    s.on("task:completed", (data: any) => {
-      toast.success(`Task "${data.task.title}" completed!`, {
-        duration: 5000,
-        icon: '✅',
-      });
-    });
-
-    // Report updates
-    s.on("report:submitted", (data: any) => {
-      toast.success(`Report submitted for task "${data.report.task}"!`, {
-        duration: 5000,
-        icon: '📊',
-      });
-    });
-
-    // User updates
+    // User-related notifications
     s.on("user:login", (data: any) => {
-      toast(`User ${data.user.name} logged in`, {
-        duration: 3000,
-        icon: '👤',
-      });
-    });
-
-    s.on("user:logout", (data: any) => {
-      toast(`User ${data.user.name} logged out`, {
+      toast.success(`Welcome back, ${data.user.name}!`, {
         duration: 3000,
         icon: '👋',
       });
@@ -229,6 +203,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      // Fallback: mark as read locally even if API call fails
+      setNotifications(prev => 
+        prev.map(notif => 
+          notif.id === notificationId 
+            ? { ...notif, isRead: true }
+            : notif
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
     }
   };
 
@@ -252,6 +235,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
+      // Fallback: mark all as read locally even if API call fails
+      setNotifications(prev => 
+        prev.map(notif => ({ ...notif, isRead: true }))
+      );
+      setUnreadCount(0);
     }
   };
 

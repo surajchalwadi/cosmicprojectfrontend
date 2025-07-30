@@ -1,4 +1,5 @@
 // Environment configuration for Vercel deployment
+
 interface EnvironmentConfig {
   API_BASE_URL: string;
   SOCKET_URL: string;
@@ -67,7 +68,6 @@ const getCurrentEnvironment = (): EnvironmentConfig => {
     };
   }
   
-<<<<<<< HEAD
   // Check if we're on Vercel (production deployment)
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
@@ -101,7 +101,6 @@ console.log('🌍 Environment Configuration:', {
   NODE_ENV,
   MODE: import.meta.env?.MODE,
   VITE_API_BASE_URL: import.meta.env?.VITE_API_BASE_URL,
-<<<<<<< HEAD
   hostname: typeof window !== 'undefined' ? window.location.hostname : 'server'
 });
 

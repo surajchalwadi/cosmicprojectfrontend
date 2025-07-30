@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   server: {
     host: "::",
     port: 3000,
@@ -21,8 +21,6 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     sourcemap: false,
-    minify: 'esbuild',
-    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -36,14 +34,6 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-    // Increase chunk size warning limit
     chunkSizeWarningLimit: 1000,
   },
-  esbuild: {
-    drop: mode === "production" ? ["console", "debugger"] : [],
-  },
-  // Define environment variables for build time
-  define: {
-    'process.env.NODE_ENV': JSON.stringify(mode),
-  },
-}));
+});

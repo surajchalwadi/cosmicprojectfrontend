@@ -144,7 +144,7 @@ export const NotificationBell: React.FC<{ className?: string }> = ({
                   key={notification.id}
                   className={cn(
                     "p-3 hover:bg-muted/50 transition-colors cursor-pointer border-l-4",
-                    !notification.read
+                    !notification.isRead
                       ? "bg-primary/5 border-l-primary"
                       : "border-l-transparent",
                   )}
