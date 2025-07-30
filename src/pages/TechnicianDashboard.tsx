@@ -101,36 +101,7 @@ const TechnicianDashboard = () => {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
 
-  const { socket, testSocketConnection } = useSocket();
-
-  // Poll for notifications every 30 seconds as backup to socket events
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE_URL}/notifications`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        
-        if (response.ok) {
-          const notifications = await response.json();
-          console.log("TechnicianDashboard - Fetched notifications via API:", notifications);
-        }
-      } catch (error) {
-        console.log("TechnicianDashboard - Error fetching notifications:", error);
-      }
-    };
-
-    // Fetch immediately
-    fetchNotifications();
-    
-    // Then poll every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
+  const { socket } = useSocket();
 
   const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
@@ -175,28 +146,20 @@ const TechnicianDashboard = () => {
   }, []);
 
   useEffect(() => {
-    console.log("TechnicianDashboard - Socket available:", !!socket);
-    console.log("TechnicianDashboard - Socket connected:", socket?.connected);
-    console.log("TechnicianDashboard - Socket ID:", socket?.id);
-    
     if (!socket) {
-      console.log("TechnicianDashboard - No socket available");
       return;
     }
     
     // Project created
     socket.on("project_created", (data) => {
-      console.log("TechnicianDashboard - Project created event received:", data);
       toast.success(`New project "${data.project.siteName}" created.`);
     });
     // Task assigned
     socket.on("task:assigned", (data) => {
-      console.log("TechnicianDashboard - Task assigned event received:", data);
       toast.success(`You have been assigned a new task: "${data.task.title}".`);
     });
     // Task status updated
     socket.on("task_status_updated", (data) => {
-      console.log("Received real-time update (technician):", data);
       toast(`Task "${data.task.title}" status updated to "${data.task.status}".`);
       // Optimistically update the task in state
       setAllTasks((prevTasks) => {
@@ -407,13 +370,6 @@ const TechnicianDashboard = () => {
               reports from the navigation menu.
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={testSocketConnection}
-            className="mobile-button"
-          >
-            🔧 Test Socket Connection
-          </Button>
         </div>
 
         {/* Stats Cards */}

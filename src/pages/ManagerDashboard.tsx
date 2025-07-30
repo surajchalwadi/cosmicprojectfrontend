@@ -385,62 +385,7 @@ const ManagerDashboard = () => {
             }
           };
           
-          console.log("ManagerDashboard - Emitting task:assigned event:", taskData);
-          console.log("ManagerDashboard - Socket connected:", socket?.connected);
-          console.log("ManagerDashboard - Socket ID:", socket?.id);
-          console.log("ManagerDashboard - Target technician ID:", selectedTechnician);
-          console.log("ManagerDashboard - Socket auth data:", socket?.auth);
-          console.log("ManagerDashboard - About to emit task:assigned event...");
-          
-          // Emit to all connected clients (broadcast)
           socket.emit('task:assigned', taskData);
-          console.log("ManagerDashboard - Task:assigned event emitted successfully");
-          console.log("ManagerDashboard - Event data sent:", JSON.stringify(taskData, null, 2));
-          
-          // Also try emitting to specific technician room
-          socket.emit('task:assigned:technician', {
-            technicianId: selectedTechnician,
-            ...taskData
-          });
-          console.log("ManagerDashboard - Task:assigned:technician event also emitted");
-          
-          // Also emit a test event to verify socket communication
-          socket.emit('test:broadcast', { message: 'Test broadcast from manager', timestamp: Date.now() });
-          console.log("ManagerDashboard - Test broadcast event also emitted");
-          
-          // Backup: Create notification via API call
-          try {
-            const notificationData = {
-              title: "New Task Assigned",
-              message: `You have been assigned a new task: "${taskTitle}"`,
-              type: 'info',
-              priority: taskPriority || 'medium',
-              category: 'task',
-              metadata: {
-                taskId: data.task._id,
-                projectId: selectedProject,
-                technicianId: selectedTechnician
-              },
-              recipientId: selectedTechnician
-            };
-            
-            const notificationResponse = await fetch(`${API_BASE_URL}/notifications`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(notificationData),
-            });
-            
-            if (notificationResponse.ok) {
-              console.log("ManagerDashboard - Notification created via API");
-            } else {
-              console.log("ManagerDashboard - Failed to create notification via API");
-            }
-          } catch (error) {
-            console.log("ManagerDashboard - Error creating notification via API:", error);
-          }
         } else {
           console.log("Socket not available for task assignment notification");
         }
