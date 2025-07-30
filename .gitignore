@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+node_modules
+=======
 # Dependencies
 node_modules/
 npm-debug.log*
@@ -101,3 +104,4 @@ jspm_packages/
 
 # Vercel
 .vercel 
+>>>>>>> origin/master

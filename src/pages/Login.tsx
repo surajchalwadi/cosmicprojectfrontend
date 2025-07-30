@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+<<<<<<< HEAD
+import { authAPI } from "@/utils/api";
+=======
 import { API_BASE_URL } from "@/config/environment";
+>>>>>>> origin/master
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -50,6 +54,10 @@ const Login = () => {
     }
 
     try {
+<<<<<<< HEAD
+      // Use the authAPI utility for login
+      const data = await authAPI.login(email, password, role);
+=======
       // Make direct API call first to get user data
       const response = await fetch(`${API_BASE_URL}/auth/login`,{
         method: "POST",
@@ -74,6 +82,7 @@ const Login = () => {
       }
 
       const data = await response.json();
+>>>>>>> origin/master
 
       if (data.status === "success") {
         // Store token and user info
