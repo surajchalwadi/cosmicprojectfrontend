@@ -54,7 +54,7 @@ import {
 import { Link } from "react-router-dom";
 import toast from 'react-hot-toast';
 import { useSocket } from "@/contexts/SocketContext";
-import SocketTest from "@/components/ui/SocketTest";
+
 
 const SuperAdminDashboard = () => {
   // State for stats and projects
@@ -457,10 +457,7 @@ const SuperAdminDashboard = () => {
         {/* Stats Cards */}
         <StatsCards stats={statsCards} />
 
-        {/* Socket Test Component */}
-        <div className="lg:col-span-1">
-          <SocketTest />
-        </div>
+
 
         {/* Main Content */}
         <div className="mobile-grid-3">

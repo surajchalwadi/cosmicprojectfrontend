@@ -20,7 +20,7 @@ import TechnicianTasks from "./pages/TechnicianTasks";
 import ManagerTechniciansPage from "./pages/ManagerTechniciansPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from 'react-hot-toast';
-import TestToast from "./pages/TestToast";
+
 
 const queryClient = new QueryClient();
 
@@ -39,8 +39,7 @@ const App = () => (
               {/* Authentication */}
               <Route path="/login" element={<Login />} />
               
-              {/* Test Route */}
-              <Route path="/test-toast" element={<TestToast />} />
+
 
               {/* Super Admin Routes */}
               <Route
