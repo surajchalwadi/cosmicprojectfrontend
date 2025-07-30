@@ -126,6 +126,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     console.log("SocketContext - Setting up task:assigned listener");
     s.on("task:assigned", (data: any) => {
       console.log("SocketContext - Task assigned event received:", data);
+      console.log("SocketContext - Current user should be technician:", data.technician?._id);
       
       toast.success(`Task "${data.task.title}" assigned to you`, {
         duration: 5000,

@@ -388,6 +388,7 @@ const ManagerDashboard = () => {
           console.log("ManagerDashboard - Emitting task:assigned event:", taskData);
           console.log("ManagerDashboard - Socket connected:", socket?.connected);
           console.log("ManagerDashboard - Socket ID:", socket?.id);
+          console.log("ManagerDashboard - Target technician ID:", selectedTechnician);
           socket.emit('task:assigned', taskData);
           console.log("ManagerDashboard - Task:assigned event emitted successfully");
         } else {
