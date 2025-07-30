@@ -103,5 +103,8 @@ jspm_packages/
 .vscode-test
 
 # Vercel
-.vercel 
+.vercel
+
+# Package lock (will be regenerated)
+package-lock.json 
 >>>>>>> origin/master

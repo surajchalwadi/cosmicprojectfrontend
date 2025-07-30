@@ -68,13 +68,5 @@
     "tailwindcss": "^3.3.3",
     "typescript": "^5.0.2",
     "vite": "^4.3.9"
-  },
-  "resolutions": {
-    "rollup": "4.6.0",
-    "@rollup/rollup-linux-x64-gnu": "4.6.0",
-    "@rollup/rollup-linux-x64-musl": "4.6.0",
-    "@rollup/rollup-darwin-x64": "4.6.0",
-    "@rollup/rollup-darwin-arm64": "4.6.0",
-    "@rollup/rollup-win32-x64-msvc": "4.6.0"
   }
 }
