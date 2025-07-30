@@ -42,7 +42,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    console.log("SocketContext - Token available:", !!token);
+    console.log("SocketContext - SOCKET_URL:", SOCKET_URL);
+    
+    if (!token) {
+      console.log("SocketContext - No token found, skipping socket connection");
+      return;
+    }
 
     const s = io(SOCKET_URL, {
       auth: { token },
@@ -52,7 +58,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Socket connection events
     s.on("connect", () => {
-      console.log("Connected to server");
+      console.log("SocketContext - Connected to server");
+      console.log("SocketContext - Socket ID:", s.id);
       toast.success("Connected to real-time updates");
     });
 
@@ -109,7 +116,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     // Task-related notifications
+    console.log("SocketContext - Setting up task:assigned listener");
     s.on("task:assigned", (data: any) => {
+      console.log("SocketContext - Task assigned event received:", data);
+      
       toast.success(`Task "${data.task.title}" assigned to you`, {
         duration: 5000,
         icon: '📋',
@@ -132,8 +142,19 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isRead: false
       };
       
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
+      console.log("Adding notification to bell:", notification);
+      setNotifications(prev => {
+        console.log("Previous notifications:", prev);
+        const newNotifications = [notification, ...prev];
+        console.log("New notifications array:", newNotifications);
+        return newNotifications;
+      });
+      setUnreadCount(prev => {
+        console.log("Previous unread count:", prev);
+        const newCount = prev + 1;
+        console.log("New unread count:", newCount);
+        return newCount;
+      });
     });
 
     s.on("task:completed", (data: any) => {

@@ -366,7 +366,7 @@ const ManagerDashboard = () => {
 
         // Emit socket event to notify technician
         if (socket) {
-          socket.emit('task:assigned', {
+          const taskData = {
             task: {
               _id: data.data._id,
               title: taskTitle,
@@ -383,7 +383,15 @@ const ManagerDashboard = () => {
               _id: selectedProject,
               siteName: project?.siteName || "Unknown"
             }
-          });
+          };
+          
+          console.log("ManagerDashboard - Emitting task:assigned event:", taskData);
+          console.log("ManagerDashboard - Socket connected:", socket?.connected);
+          console.log("ManagerDashboard - Socket ID:", socket?.id);
+          socket.emit('task:assigned', taskData);
+          console.log("ManagerDashboard - Task:assigned event emitted successfully");
+        } else {
+          console.log("Socket not available for task assignment notification");
         }
 
         alert(

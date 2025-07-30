@@ -146,13 +146,23 @@ const TechnicianDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!socket) return;
+    console.log("TechnicianDashboard - Socket available:", !!socket);
+    console.log("TechnicianDashboard - Socket connected:", socket?.connected);
+    console.log("TechnicianDashboard - Socket ID:", socket?.id);
+    
+    if (!socket) {
+      console.log("TechnicianDashboard - No socket available");
+      return;
+    }
+    
     // Project created
     socket.on("project_created", (data) => {
+      console.log("TechnicianDashboard - Project created event received:", data);
       toast.success(`New project "${data.project.siteName}" created.`);
     });
     // Task assigned
     socket.on("task:assigned", (data) => {
+      console.log("TechnicianDashboard - Task assigned event received:", data);
       toast.success(`You have been assigned a new task: "${data.task.title}".`);
     });
     // Task status updated
