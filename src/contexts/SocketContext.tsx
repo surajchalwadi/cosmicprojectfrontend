@@ -40,6 +40,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Debug socket state changes
+  useEffect(() => {
+    console.log("SocketContext - Socket state changed:", !!socket, socket?.id, socket?.connected);
+  }, [socket]);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     console.log("SocketContext - Token available:", !!token);
@@ -61,6 +66,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log("SocketContext - Connected to server");
       console.log("SocketContext - Socket ID:", s.id);
       toast.success("Connected to real-time updates");
+      // Set socket only after it's connected
+      setSocket(s);
     });
 
     s.on("disconnect", () => {
@@ -213,9 +220,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     });
 
-    setSocket(s);
-
     return () => {
+      console.log("SocketContext - Cleaning up socket connection");
       s.disconnect();
     };
   }, []);
