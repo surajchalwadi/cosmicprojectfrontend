@@ -196,6 +196,56 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
       });
 
+      // Also listen for the specific technician event
+      s.on("task:assigned:technician", (data: any) => {
+        console.log("SocketContext - Task assigned:technician event received:", data);
+        console.log("SocketContext - Target technician ID:", data.technicianId);
+        console.log("SocketContext - Current user ID:", currentUser?.id);
+        
+        // Check if this event is for the current user
+        if (data.technicianId === currentUser?.id) {
+          console.log("SocketContext - This task assignment is for current user!");
+          
+          toast.success(`Task "${data.task.title}" assigned to you`, {
+            duration: 5000,
+            icon: '📋',
+          });
+          
+          // Add notification to the notification bell
+          const notification: Notification = {
+            id: `task-assigned-${Date.now()}`,
+            title: "New Task Assigned",
+            message: `You have been assigned a new task: "${data.task.title}"`,
+            type: 'info',
+            priority: data.task.priority || 'medium',
+            category: 'task',
+            metadata: {
+              taskId: data.task._id,
+              projectId: data.project?._id,
+              technicianId: data.technicianId
+            },
+            createdAt: new Date().toISOString(),
+            isRead: false
+          };
+          
+          console.log("Adding notification to bell:", notification);
+          setNotifications(prev => {
+            console.log("Previous notifications:", prev);
+            const newNotifications = [notification, ...prev];
+            console.log("New notifications array:", newNotifications);
+            return newNotifications;
+          });
+          setUnreadCount(prev => {
+            console.log("Previous unread count:", prev);
+            const newCount = prev + 1;
+            console.log("New unread count:", newCount);
+            return newCount;
+          });
+        } else {
+          console.log("SocketContext - This task assignment is NOT for current user");
+        }
+      });
+
       s.on("task:completed", (data: any) => {
         toast.success(`Task "${data.task.title}" completed successfully`, {
           duration: 4000,

@@ -391,9 +391,18 @@ const ManagerDashboard = () => {
           console.log("ManagerDashboard - Target technician ID:", selectedTechnician);
           console.log("ManagerDashboard - Socket auth data:", socket?.auth);
           console.log("ManagerDashboard - About to emit task:assigned event...");
+          
+          // Emit to all connected clients (broadcast)
           socket.emit('task:assigned', taskData);
           console.log("ManagerDashboard - Task:assigned event emitted successfully");
           console.log("ManagerDashboard - Event data sent:", JSON.stringify(taskData, null, 2));
+          
+          // Also try emitting to specific technician room
+          socket.emit('task:assigned:technician', {
+            technicianId: selectedTechnician,
+            ...taskData
+          });
+          console.log("ManagerDashboard - Task:assigned:technician event also emitted");
           
           // Also emit a test event to verify socket communication
           socket.emit('test:broadcast', { message: 'Test broadcast from manager', timestamp: Date.now() });
