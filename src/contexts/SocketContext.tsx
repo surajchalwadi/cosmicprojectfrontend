@@ -64,7 +64,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const s = io(SOCKET_URL, {
       auth: { 
         token,
-        userId: currentUser?.id,
+        userId: currentUser?._id,
         userRole: currentUser?.role
       },
       transports: ["websocket"],
@@ -100,7 +100,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Test broadcast event listener
       s.on("test:broadcast", (data: any) => {
         console.log("SocketContext - Test broadcast received:", data);
-        toast.info("Test broadcast received from manager");
+        toast("Test broadcast received from manager", {
+          duration: 4000,
+          icon: 'ℹ️',
+        });
       });
 
       // Real-time notification events
@@ -156,7 +159,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log("SocketContext - Task assigned event received:", data);
         console.log("SocketContext - Current user should be technician:", data.technician?._id);
         console.log("SocketContext - Event data structure:", JSON.stringify(data, null, 2));
-        console.log("SocketContext - Current user ID from session:", currentUser?.id);
+        console.log("SocketContext - Current user ID from session:", currentUser?._id);
         console.log("SocketContext - Current user role:", currentUser?.role);
         
         toast.success(`Task "${data.task.title}" assigned to you`, {
@@ -200,10 +203,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       s.on("task:assigned:technician", (data: any) => {
         console.log("SocketContext - Task assigned:technician event received:", data);
         console.log("SocketContext - Target technician ID:", data.technicianId);
-        console.log("SocketContext - Current user ID:", currentUser?.id);
+        console.log("SocketContext - Current user ID:", currentUser?._id);
         
         // Check if this event is for the current user
-        if (data.technicianId === currentUser?.id) {
+        if (data.technicianId === currentUser?._id) {
           console.log("SocketContext - This task assignment is for current user!");
           
           toast.success(`Task "${data.task.title}" assigned to you`, {
@@ -268,14 +271,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
 
       s.on("project:updated", (data: any) => {
-        toast.info(`Project "${data.project.siteName}" updated`, {
+        toast(`Project "${data.project.siteName}" updated`, {
           duration: 4000,
           icon: '📝',
         });
       });
 
       s.on("user:login", (data: any) => {
-        toast.info(`${data.user.name} logged in`, {
+        toast(`${data.user.name} logged in`, {
           duration: 3000,
           icon: '👤',
         });
