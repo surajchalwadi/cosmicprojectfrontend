@@ -69,9 +69,6 @@ export const NotificationBell: React.FC<{ className?: string }> = ({
     clearNotifications,
   } = useSocket();
 
-  console.log("NotificationBell - notifications:", notifications);
-  console.log("NotificationBell - unreadCount:", unreadCount);
-
   const recentNotifications = notifications.slice(0, 10);
 
   return (

@@ -93,15 +93,4 @@ export const NODE_ENV = env.NODE_ENV;
 export const isDevelopment = () => NODE_ENV === 'development';
 export const isProduction = () => NODE_ENV === 'production';
 
-// Debug logging
-console.log('🌍 Environment Configuration:', {
-  API_BASE_URL,
-  SOCKET_URL,
-  FILE_BASE_URL,
-  NODE_ENV,
-  MODE: import.meta.env?.MODE,
-  VITE_API_BASE_URL: import.meta.env?.VITE_API_BASE_URL,
-  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server'
-});
-
 export default env;
