@@ -177,7 +177,7 @@ const SuperAdminSettings = () => {
             {/* Managers Section */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
@@ -191,6 +191,7 @@ const SuperAdminSettings = () => {
                       setUserForm({ ...userForm, role: "manager" });
                       setIsAddUserOpen(true);
                     }}
+                    className="w-full sm:w-auto"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Manager
@@ -252,7 +253,7 @@ const SuperAdminSettings = () => {
             {/* Technicians Section */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Settings className="h-5 w-5" />
@@ -266,6 +267,7 @@ const SuperAdminSettings = () => {
                       setUserForm({ ...userForm, role: "technician" });
                       setIsAddUserOpen(true);
                     }}
+                    className="w-full sm:w-auto"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Technician
