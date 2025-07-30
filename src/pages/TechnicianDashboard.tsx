@@ -152,7 +152,7 @@ const TechnicianDashboard = () => {
       toast.success(`New project "${data.project.siteName}" created.`);
     });
     // Task assigned
-    socket.on("task_assigned", (data) => {
+    socket.on("task:assigned", (data) => {
       toast.success(`You have been assigned a new task: "${data.task.title}".`);
     });
     // Task status updated
@@ -176,7 +176,7 @@ const TechnicianDashboard = () => {
     });
     return () => {
       socket.off("project_created");
-      socket.off("task_assigned");
+      socket.off("task:assigned");
       socket.off("task_status_updated");
       socket.off("report_submitted");
     };

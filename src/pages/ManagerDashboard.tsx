@@ -364,6 +364,28 @@ const ManagerDashboard = () => {
           (t) => t._id === selectedTechnician,
         );
 
+        // Emit socket event to notify technician
+        if (socket) {
+          socket.emit('task:assigned', {
+            task: {
+              _id: data.data._id,
+              title: taskTitle,
+              description: taskDescription,
+              priority: taskPriority || "medium",
+              deadline: taskDeadline,
+              status: "assigned"
+            },
+            technician: {
+              _id: selectedTechnician,
+              name: technician?.name || "Unknown"
+            },
+            project: {
+              _id: selectedProject,
+              siteName: project?.siteName || "Unknown"
+            }
+          });
+        }
+
         alert(
           `✅ Task "${taskTitle}" has been successfully assigned to ${technician?.name || "Unknown"} for project "${project?.siteName || "Unknown"}"\n\nThe technician will be notified and can now view this task in their dashboard.`,
         );

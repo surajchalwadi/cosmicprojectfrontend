@@ -114,6 +114,26 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         duration: 5000,
         icon: '📋',
       });
+      
+      // Add notification to the notification bell
+      const notification: Notification = {
+        id: `task-assigned-${Date.now()}`,
+        title: "New Task Assigned",
+        message: `You have been assigned a new task: "${data.task.title}"`,
+        type: 'info',
+        priority: data.task.priority || 'medium',
+        category: 'task',
+        metadata: {
+          taskId: data.task._id,
+          projectId: data.project?._id,
+          technicianId: data.technician?._id
+        },
+        createdAt: new Date().toISOString(),
+        isRead: false
+      };
+      
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
     });
 
     s.on("task:completed", (data: any) => {
