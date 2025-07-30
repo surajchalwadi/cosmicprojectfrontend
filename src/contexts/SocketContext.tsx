@@ -22,6 +22,7 @@ interface SocketContextValue {
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
+  testSocketConnection: () => void;
 }
 
 const SocketContext = createContext<SocketContextValue>({ 
@@ -55,8 +56,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
+    // Get current user from session storage
+    const currentUserStr = sessionStorage.getItem("currentUser");
+    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+    console.log("SocketContext - Current user:", currentUser);
+
     const s = io(SOCKET_URL, {
-      auth: { token },
+      auth: { 
+        token,
+        userId: currentUser?.id,
+        userRole: currentUser?.role
+      },
       transports: ["websocket"],
       withCredentials: true,
     });
@@ -65,6 +75,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     s.on("connect", () => {
       console.log("SocketContext - Connected to server");
       console.log("SocketContext - Socket ID:", s.id);
+      console.log("SocketContext - Socket auth:", s.auth);
       toast.success("Connected to real-time updates");
       // Set socket only after it's connected
       setSocket(s);
@@ -73,6 +84,19 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     s.on("disconnect", () => {
       console.log("Disconnected from server");
       toast.error("Lost connection to real-time updates");
+    });
+
+    s.on("authenticated", (data: any) => {
+      console.log("SocketContext - Socket authenticated:", data);
+    });
+
+    s.on("unauthorized", (data: any) => {
+      console.log("SocketContext - Socket unauthorized:", data);
+    });
+
+    // Test event listener to verify socket communication
+    s.on("test:response", (data: any) => {
+      console.log("SocketContext - Test response received:", data);
     });
 
     // Real-time notification events
@@ -127,6 +151,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     s.on("task:assigned", (data: any) => {
       console.log("SocketContext - Task assigned event received:", data);
       console.log("SocketContext - Current user should be technician:", data.technician?._id);
+      console.log("SocketContext - Event data structure:", JSON.stringify(data, null, 2));
       
       toast.success(`Task "${data.task.title}" assigned to you`, {
         duration: 5000,
@@ -297,6 +322,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setUnreadCount(0);
   };
 
+  // Test socket connection
+  const testSocketConnection = () => {
+    if (socket) {
+      console.log("SocketContext - Testing socket connection...");
+      socket.emit("test:ping", { message: "Hello from client", timestamp: Date.now() });
+    } else {
+      console.log("SocketContext - No socket available for testing");
+    }
+  };
+
   return (
     <SocketContext.Provider value={{ 
       socket, 
@@ -304,7 +339,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       unreadCount,
       markAsRead,
       markAllAsRead,
-      clearNotifications
+      clearNotifications,
+      testSocketConnection
     }}>
       {children}
     </SocketContext.Provider>

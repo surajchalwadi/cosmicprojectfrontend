@@ -101,7 +101,7 @@ const TechnicianDashboard = () => {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
 
-  const { socket } = useSocket();
+  const { socket, testSocketConnection } = useSocket();
 
   const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
@@ -378,6 +378,13 @@ const TechnicianDashboard = () => {
               reports from the navigation menu.
             </p>
           </div>
+          <Button
+            variant="outline"
+            onClick={testSocketConnection}
+            className="mobile-button"
+          >
+            🔧 Test Socket Connection
+          </Button>
         </div>
 
         {/* Stats Cards */}
