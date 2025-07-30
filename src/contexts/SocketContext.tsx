@@ -77,173 +77,185 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log("SocketContext - Socket ID:", s.id);
       console.log("SocketContext - Socket auth:", s.auth);
       toast.success("Connected to real-time updates");
-      // Set socket only after it's connected
+      
+      // Set up all event listeners AFTER connection is established
+      s.on("authenticated", (data: any) => {
+        console.log("SocketContext - Socket authenticated:", data);
+      });
+
+      s.on("unauthorized", (data: any) => {
+        console.log("SocketContext - Socket unauthorized:", data);
+      });
+
+      // Test event listener to verify socket communication
+      s.on("test:response", (data: any) => {
+        console.log("SocketContext - Test response received:", data);
+      });
+
+      // Listen for all events to debug
+      s.onAny((eventName: string, ...args: any[]) => {
+        console.log("SocketContext - Received event:", eventName, args);
+      });
+
+      // Test broadcast event listener
+      s.on("test:broadcast", (data: any) => {
+        console.log("SocketContext - Test broadcast received:", data);
+        toast.info("Test broadcast received from manager");
+      });
+
+      // Real-time notification events
+      s.on("notification:new", (notification: Notification) => {
+        console.log("New notification received:", notification);
+        
+        // Add to notifications list with isRead: false
+        const newNotification = { ...notification, isRead: false };
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+
+        // Show toast notification based on type
+        switch (notification.type) {
+          case 'success':
+            toast.success(notification.message, {
+              duration: 5000,
+              icon: '✅',
+            });
+            break;
+          case 'error':
+            toast.error(notification.message, {
+              duration: 6000,
+              icon: '❌',
+            });
+            break;
+          case 'warning':
+            toast(notification.message, {
+              duration: 5000,
+              icon: '⚠️',
+              style: {
+                background: '#fbbf24',
+                color: '#1f2937',
+              },
+            });
+            break;
+          case 'info':
+            toast(notification.message, {
+              duration: 4000,
+              icon: 'ℹ️',
+            });
+            break;
+          default:
+            toast(notification.message, {
+              duration: 4000,
+              icon: '📢',
+            });
+        }
+      });
+
+      // Task-related notifications
+      console.log("SocketContext - Setting up task:assigned listener");
+      s.on("task:assigned", (data: any) => {
+        console.log("SocketContext - Task assigned event received:", data);
+        console.log("SocketContext - Current user should be technician:", data.technician?._id);
+        console.log("SocketContext - Event data structure:", JSON.stringify(data, null, 2));
+        console.log("SocketContext - Current user ID from session:", currentUser?.id);
+        console.log("SocketContext - Current user role:", currentUser?.role);
+        
+        toast.success(`Task "${data.task.title}" assigned to you`, {
+          duration: 5000,
+          icon: '📋',
+        });
+        
+        // Add notification to the notification bell
+        const notification: Notification = {
+          id: `task-assigned-${Date.now()}`,
+          title: "New Task Assigned",
+          message: `You have been assigned a new task: "${data.task.title}"`,
+          type: 'info',
+          priority: data.task.priority || 'medium',
+          category: 'task',
+          metadata: {
+            taskId: data.task._id,
+            projectId: data.project?._id,
+            technicianId: data.technician?._id
+          },
+          createdAt: new Date().toISOString(),
+          isRead: false
+        };
+        
+        console.log("Adding notification to bell:", notification);
+        setNotifications(prev => {
+          console.log("Previous notifications:", prev);
+          const newNotifications = [notification, ...prev];
+          console.log("New notifications array:", newNotifications);
+          return newNotifications;
+        });
+        setUnreadCount(prev => {
+          console.log("Previous unread count:", prev);
+          const newCount = prev + 1;
+          console.log("New unread count:", newCount);
+          return newCount;
+        });
+      });
+
+      s.on("task:completed", (data: any) => {
+        toast.success(`Task "${data.task.title}" completed successfully`, {
+          duration: 4000,
+          icon: '✅',
+        });
+      });
+
+      s.on("task:overdue", (data: any) => {
+        toast.error(`Task "${data.task.title}" is overdue!`, {
+          duration: 8000,
+          icon: '⏰',
+        });
+      });
+
+      s.on("project:created", (data: any) => {
+        toast.success(`New project "${data.project.siteName}" created`, {
+          duration: 4000,
+          icon: '🏗️',
+        });
+      });
+
+      s.on("project:updated", (data: any) => {
+        toast.info(`Project "${data.project.siteName}" updated`, {
+          duration: 4000,
+          icon: '📝',
+        });
+      });
+
+      s.on("user:login", (data: any) => {
+        toast.info(`${data.user.name} logged in`, {
+          duration: 3000,
+          icon: '👤',
+        });
+      });
+
+      s.on("system:maintenance", (data: any) => {
+        toast(data.message, {
+          duration: 8000,
+          icon: '🔧',
+          style: {
+            background: '#3b82f6',
+            color: 'white',
+          },
+        });
+      });
+
+      s.on("system:alert", (data: any) => {
+        toast.error(data.message, {
+          duration: 10000,
+          icon: '🚨',
+        });
+      });
+      
+      // Set socket only after it's connected and all listeners are set up
       setSocket(s);
     });
 
     s.on("disconnect", () => {
       console.log("Disconnected from server");
       toast.error("Lost connection to real-time updates");
-    });
-
-    s.on("authenticated", (data: any) => {
-      console.log("SocketContext - Socket authenticated:", data);
-    });
-
-    s.on("unauthorized", (data: any) => {
-      console.log("SocketContext - Socket unauthorized:", data);
-    });
-
-    // Test event listener to verify socket communication
-    s.on("test:response", (data: any) => {
-      console.log("SocketContext - Test response received:", data);
-    });
-
-    // Real-time notification events
-    s.on("notification:new", (notification: Notification) => {
-      console.log("New notification received:", notification);
-      
-      // Add to notifications list with isRead: false
-      const newNotification = { ...notification, isRead: false };
-      setNotifications(prev => [newNotification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-
-      // Show toast notification based on type
-      switch (notification.type) {
-        case 'success':
-          toast.success(notification.message, {
-            duration: 5000,
-            icon: '✅',
-          });
-          break;
-        case 'error':
-          toast.error(notification.message, {
-            duration: 6000,
-            icon: '❌',
-          });
-          break;
-        case 'warning':
-          toast(notification.message, {
-            duration: 5000,
-            icon: '⚠️',
-            style: {
-              background: '#fbbf24',
-              color: '#1f2937',
-            },
-          });
-          break;
-        case 'info':
-          toast(notification.message, {
-            duration: 4000,
-            icon: 'ℹ️',
-          });
-          break;
-        default:
-          toast(notification.message, {
-            duration: 4000,
-            icon: '📢',
-          });
-      }
-    });
-
-    // Task-related notifications
-    console.log("SocketContext - Setting up task:assigned listener");
-    s.on("task:assigned", (data: any) => {
-      console.log("SocketContext - Task assigned event received:", data);
-      console.log("SocketContext - Current user should be technician:", data.technician?._id);
-      console.log("SocketContext - Event data structure:", JSON.stringify(data, null, 2));
-      
-      toast.success(`Task "${data.task.title}" assigned to you`, {
-        duration: 5000,
-        icon: '📋',
-      });
-      
-      // Add notification to the notification bell
-      const notification: Notification = {
-        id: `task-assigned-${Date.now()}`,
-        title: "New Task Assigned",
-        message: `You have been assigned a new task: "${data.task.title}"`,
-        type: 'info',
-        priority: data.task.priority || 'medium',
-        category: 'task',
-        metadata: {
-          taskId: data.task._id,
-          projectId: data.project?._id,
-          technicianId: data.technician?._id
-        },
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
-      
-      console.log("Adding notification to bell:", notification);
-      setNotifications(prev => {
-        console.log("Previous notifications:", prev);
-        const newNotifications = [notification, ...prev];
-        console.log("New notifications array:", newNotifications);
-        return newNotifications;
-      });
-      setUnreadCount(prev => {
-        console.log("Previous unread count:", prev);
-        const newCount = prev + 1;
-        console.log("New unread count:", newCount);
-        return newCount;
-      });
-    });
-
-    s.on("task:completed", (data: any) => {
-      toast.success(`Task "${data.task.title}" completed successfully`, {
-        duration: 4000,
-        icon: '✅',
-      });
-    });
-
-    s.on("task:overdue", (data: any) => {
-      toast.error(`Task "${data.task.title}" is overdue!`, {
-        duration: 8000,
-        icon: '⏰',
-      });
-    });
-
-    // Project-related notifications
-    s.on("project:created", (data: any) => {
-      toast.success(`New project "${data.project.siteName}" created`, {
-        duration: 5000,
-        icon: '🏗️',
-      });
-    });
-
-    s.on("project:updated", (data: any) => {
-      toast.info(`Project "${data.project.siteName}" has been updated`, {
-        duration: 4000,
-        icon: '📝',
-      });
-    });
-
-    // User-related notifications
-    s.on("user:login", (data: any) => {
-      toast.success(`Welcome back, ${data.user.name}!`, {
-        duration: 3000,
-        icon: '👋',
-      });
-    });
-
-    // System notifications
-    s.on("system:maintenance", (data: any) => {
-      toast(data.message, {
-        duration: 8000,
-        icon: '🔧',
-        style: {
-          background: '#f59e0b',
-          color: '#1f2937',
-        },
-      });
-    });
-
-    s.on("system:alert", (data: any) => {
-      toast.error(data.message, {
-        duration: 10000,
-        icon: '🚨',
-      });
     });
 
     return () => {

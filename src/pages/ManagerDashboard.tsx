@@ -389,8 +389,15 @@ const ManagerDashboard = () => {
           console.log("ManagerDashboard - Socket connected:", socket?.connected);
           console.log("ManagerDashboard - Socket ID:", socket?.id);
           console.log("ManagerDashboard - Target technician ID:", selectedTechnician);
+          console.log("ManagerDashboard - Socket auth data:", socket?.auth);
+          console.log("ManagerDashboard - About to emit task:assigned event...");
           socket.emit('task:assigned', taskData);
           console.log("ManagerDashboard - Task:assigned event emitted successfully");
+          console.log("ManagerDashboard - Event data sent:", JSON.stringify(taskData, null, 2));
+          
+          // Also emit a test event to verify socket communication
+          socket.emit('test:broadcast', { message: 'Test broadcast from manager', timestamp: Date.now() });
+          console.log("ManagerDashboard - Test broadcast event also emitted");
         } else {
           console.log("Socket not available for task assignment notification");
         }
