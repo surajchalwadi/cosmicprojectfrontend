@@ -452,6 +452,38 @@ const SuperAdminDashboard = () => {
           <Button variant="outline" onClick={() => setIsTaskReportOpen(true)} className="mobile-button">
             <FileText className="mr-2 h-4 w-4" /> Task Report
           </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              if (socket) {
+                socket.emit('test:notification', {
+                  title: 'Test Notification',
+                  message: 'This is a test notification from the dashboard',
+                  type: 'info',
+                  priority: 'medium',
+                  category: 'system'
+                });
+                toast.success('Test notification sent!');
+              } else {
+                toast.error('Socket not connected');
+              }
+            }} 
+            className="mobile-button"
+          >
+            🔔 Test Notification
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              toast.success('Success notification!');
+              toast.error('Error notification!');
+              toast('Default notification!');
+              toast.loading('Loading notification...');
+            }} 
+            className="mobile-button"
+          >
+            🍞 Test Toast
+          </Button>
         </div>
 
         {/* Stats Cards */}
