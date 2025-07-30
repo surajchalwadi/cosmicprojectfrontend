@@ -230,7 +230,22 @@ const SuperAdminSettings = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setUserType("manager");
+                                    setUserForm({
+                                      name: manager.name,
+                                      email: manager.email,
+                                      phone: manager.phone || "",
+                                      department: manager.department || "",
+                                      role: "manager",
+                                      password: ""
+                                    });
+                                    setIsAddUserOpen(true);
+                                  }}
+                                >
                                   <Edit className="h-3 w-3" />
                                 </Button>
                                 <Button
@@ -306,7 +321,22 @@ const SuperAdminSettings = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setUserType("technician");
+                                    setUserForm({
+                                      name: technician.name,
+                                      email: technician.email,
+                                      phone: technician.phone || "",
+                                      department: technician.department || "",
+                                      role: "technician",
+                                      password: ""
+                                    });
+                                    setIsAddUserOpen(true);
+                                  }}
+                                >
                                   <Edit className="h-3 w-3" />
                                 </Button>
                                 <Button
