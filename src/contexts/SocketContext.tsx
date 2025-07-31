@@ -55,6 +55,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
+    // Don't connect on login page
+    if (window.location.pathname === '/login') {
+      return;
+    }
+
     const s = io(SOCKET_URL, {
       auth: { 
         token,
@@ -63,12 +68,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       },
       transports: ["websocket", "polling"], // Add polling as fallback
       withCredentials: true,
-      timeout: 20000, // Increase timeout
+      timeout: 10000, // Reduce timeout
       forceNew: true, // Force new connection
     });
 
     s.on("connect", () => {
-      toast.success("Connected to real-time updates");
       setSocket(s);
     });
 
@@ -83,11 +87,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     s.on("connect_error", (error) => {
       console.error("Socket connection error:", error);
       setSocket(null);
-      
-      // Don't show error toast on login page
-      if (window.location.pathname !== '/login') {
-        toast.error("Connection failed. Retrying...");
-      }
     });
 
     s.on("notification:new", (notification: Notification) => {
