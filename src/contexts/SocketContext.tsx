@@ -50,14 +50,21 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const currentUserStr = sessionStorage.getItem("currentUser");
     const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
 
+    // Only connect if we have both token and user data
+    if (!token || !currentUser) {
+      return;
+    }
+
     const s = io(SOCKET_URL, {
       auth: { 
         token,
-        userId: currentUser?._id,
-        userRole: currentUser?.role
+        userId: currentUser._id,
+        userRole: currentUser.role
       },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"], // Add polling as fallback
       withCredentials: true,
+      timeout: 20000, // Increase timeout
+      forceNew: true, // Force new connection
     });
 
     s.on("connect", () => {
@@ -65,12 +72,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setSocket(s);
     });
 
-    s.on("disconnect", () => {
-      toast.error("Lost connection to real-time updates");
+    s.on("disconnect", (reason) => {
+      if (reason === "io server disconnect") {
+        // Server disconnected us, try to reconnect
+        s.connect();
+      }
+      setSocket(null);
     });
 
     s.on("connect_error", (error) => {
       console.error("Socket connection error:", error);
+      setSocket(null);
+      
+      // Don't show error toast on login page
+      if (window.location.pathname !== '/login') {
+        toast.error("Connection failed. Retrying...");
+      }
     });
 
     s.on("notification:new", (notification: Notification) => {
@@ -258,7 +275,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     return () => {
-      s.disconnect();
+      if (s.connected) {
+        s.disconnect();
+      }
     };
   }, []);
 
