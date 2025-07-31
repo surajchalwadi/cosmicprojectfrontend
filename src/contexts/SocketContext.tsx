@@ -81,13 +81,19 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Socket connection events
     s.on("connect", () => {
-      console.log("Connected to server");
+      console.log("✅ Connected to server");
+      console.log("🔗 Socket ID:", s.id);
+      console.log("🌐 Socket URL:", SOCKET_URL);
       toast.success("Connected to real-time updates");
     });
 
     s.on("disconnect", () => {
-      console.log("Disconnected from server");
+      console.log("❌ Disconnected from server");
       toast.error("Lost connection to real-time updates");
+    });
+
+    s.on("connect_error", (error) => {
+      console.log("🚨 Socket connection error:", error);
     });
 
     // Real-time notification events
@@ -229,7 +235,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     });
 
+    // Test response from backend
+    s.on("test:backend", (data: any) => {
+      console.log("✅ Backend responded to test:", data);
+      toast.success("Backend communication confirmed!", {
+        duration: 3000,
+        icon: '✅',
+      });
+    });
+
     setSocket(s);
+
+    // Test socket communication after 2 seconds
+    setTimeout(() => {
+      console.log("🧪 Testing socket communication...");
+      s.emit("test:frontend", { message: "Frontend is working!", timestamp: new Date().toISOString() });
+    }, 2000);
 
     // Set up periodic refresh of notifications
     const refreshInterval = setInterval(loadNotifications, 30000); // Refresh every 30 seconds
