@@ -22,7 +22,6 @@ interface SocketContextValue {
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
-  addTestNotification: () => void;
 }
 
 const SocketContext = createContext<SocketContextValue>({ 
@@ -31,8 +30,7 @@ const SocketContext = createContext<SocketContextValue>({
   unreadCount: 0,
   markAsRead: () => {},
   markAllAsRead: () => {},
-  clearNotifications: () => {},
-  addTestNotification: () => {}
+  clearNotifications: () => {}
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -46,18 +44,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const token = localStorage.getItem("token");
     
     if (!token) {
-      console.log("No token found, skipping socket connection");
       return;
     }
 
     const currentUserStr = sessionStorage.getItem("currentUser");
     const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
-    
-    console.log("Attempting socket connection with:", {
-      token: token ? "Token exists" : "No token",
-      user: currentUser ? currentUser.name : "No user",
-      socketUrl: SOCKET_URL
-    });
 
     const s = io(SOCKET_URL, {
       auth: { 
@@ -70,13 +61,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("connect", () => {
-      console.log("Socket connected successfully");
       toast.success("Connected to real-time updates");
       setSocket(s);
     });
 
     s.on("disconnect", () => {
-      console.log("Socket disconnected");
       toast.error("Lost connection to real-time updates");
     });
 
@@ -85,7 +74,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("notification:new", (notification: Notification) => {
-      console.log("Received notification:", notification);
       const newNotification = { ...notification, isRead: false };
       setNotifications(prev => [newNotification, ...prev]);
       setUnreadCount(prev => prev + 1);
@@ -128,7 +116,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("task:assigned", (data: any) => {
-      console.log("Received task:assigned event:", data);
       toast.success(`Task "${data.task.title}" assigned to you`, {
         duration: 5000,
         icon: '📋',
@@ -155,7 +142,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("task:status_changed", (data: any) => {
-      console.log("Received task:status_changed event:", data);
       toast(`Task "${data.task.title}" status updated to "${data.status}"`, {
         duration: 4000,
         icon: '📝',
@@ -181,7 +167,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("task:completed", (data: any) => {
-      console.log("Received task:completed event:", data);
       toast.success(`Task "${data.task.title}" completed successfully`, {
         duration: 4000,
         icon: '✅',
@@ -206,7 +191,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("task:updated", (data: any) => {
-      console.log("Received task:updated event:", data);
       toast(`Task "${data.task.title}" has been updated`, {
         duration: 4000,
         icon: '📝',
@@ -214,7 +198,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("project:created", (data: any) => {
-      console.log("Received project:created event:", data);
       toast.success(`New project "${data.project.siteName}" created`, {
         duration: 4000,
         icon: '🏗️',
@@ -222,7 +205,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("project:updated", (data: any) => {
-      console.log("Received project:updated event:", data);
       toast(`Project "${data.project.siteName}" updated`, {
         duration: 4000,
         icon: '📝',
@@ -230,7 +212,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("project:status_changed", (data: any) => {
-      console.log("Received project:status_changed event:", data);
       toast(`Project "${data.project.siteName}" status changed to "${data.status}"`, {
         duration: 4000,
         icon: '🔄',
@@ -245,7 +226,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("user:logout", (data: any) => {
-      console.log("Received user:logout event:", data);
       toast(`${data.user.name} logged out`, {
         duration: 3000,
         icon: '👋',
@@ -347,23 +327,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setUnreadCount(0);
   };
 
-  const addTestNotification = () => {
-    const testNotification: Notification = {
-      id: `test-${Date.now()}`,
-      title: "Test Notification",
-      message: "This is a test notification to verify the system is working",
-      type: 'info',
-      priority: 'medium',
-      category: 'general',
-      createdAt: new Date().toISOString(),
-      isRead: false
-    };
-    
-    console.log("Adding test notification:", testNotification);
-    setNotifications(prev => [testNotification, ...prev]);
-    setUnreadCount(prev => prev + 1);
-  };
-
   return (
     <SocketContext.Provider value={{ 
       socket, 
@@ -371,8 +334,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       unreadCount,
       markAsRead,
       markAllAsRead,
-      clearNotifications,
-      addTestNotification
+      clearNotifications
     }}>
       {children}
     </SocketContext.Provider>
