@@ -22,6 +22,7 @@ interface SocketContextValue {
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
+  addTestNotification: () => void;
 }
 
 const SocketContext = createContext<SocketContextValue>({ 
@@ -30,7 +31,8 @@ const SocketContext = createContext<SocketContextValue>({
   unreadCount: 0,
   markAsRead: () => {},
   markAllAsRead: () => {},
-  clearNotifications: () => {}
+  clearNotifications: () => {},
+  addTestNotification: () => {}
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -44,11 +46,18 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const token = localStorage.getItem("token");
     
     if (!token) {
+      console.log("No token found, skipping socket connection");
       return;
     }
 
     const currentUserStr = sessionStorage.getItem("currentUser");
     const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+    
+    console.log("Attempting socket connection with:", {
+      token: token ? "Token exists" : "No token",
+      user: currentUser ? currentUser.name : "No user",
+      socketUrl: SOCKET_URL
+    });
 
     const s = io(SOCKET_URL, {
       auth: { 
@@ -61,15 +70,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("connect", () => {
+      console.log("Socket connected successfully");
       toast.success("Connected to real-time updates");
       setSocket(s);
     });
 
     s.on("disconnect", () => {
+      console.log("Socket disconnected");
       toast.error("Lost connection to real-time updates");
     });
 
+    s.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+    });
+
     s.on("notification:new", (notification: Notification) => {
+      console.log("Received notification:", notification);
       const newNotification = { ...notification, isRead: false };
       setNotifications(prev => [newNotification, ...prev]);
       setUnreadCount(prev => prev + 1);
@@ -267,6 +283,23 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setUnreadCount(0);
   };
 
+  const addTestNotification = () => {
+    const testNotification: Notification = {
+      id: `test-${Date.now()}`,
+      title: "Test Notification",
+      message: "This is a test notification to verify the system is working",
+      type: 'info',
+      priority: 'medium',
+      category: 'general',
+      createdAt: new Date().toISOString(),
+      isRead: false
+    };
+    
+    console.log("Adding test notification:", testNotification);
+    setNotifications(prev => [testNotification, ...prev]);
+    setUnreadCount(prev => prev + 1);
+  };
+
   return (
     <SocketContext.Provider value={{ 
       socket, 
@@ -274,7 +307,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       unreadCount,
       markAsRead,
       markAllAsRead,
-      clearNotifications
+      clearNotifications,
+      addTestNotification
     }}>
       {children}
     </SocketContext.Provider>
