@@ -49,6 +49,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Load existing notifications
     const loadNotifications = async () => {
       try {
+        console.log("🔄 Loading existing notifications...");
         const response = await fetch(`${API_BASE_URL}/notifications`, {
           method: 'GET',
           headers: {
@@ -59,14 +60,18 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (response.ok) {
           const data = await response.json();
+          console.log("📋 Notifications loaded:", data);
           if (data.notifications) {
             setNotifications(data.notifications);
             const unread = data.notifications.filter((n: Notification) => !n.isRead).length;
             setUnreadCount(unread);
           }
+        } else {
+          console.log("⚠️ Notifications endpoint not available (status:", response.status, ")");
         }
       } catch (error) {
-        console.error('Error loading notifications:', error);
+        console.log("⚠️ Notifications endpoint not available - continuing without existing notifications");
+        // Don't show error toast - this is expected if endpoint doesn't exist
       }
     };
 
@@ -274,8 +279,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       s.emit("test:frontend", { message: "Frontend is working!", timestamp: new Date().toISOString() });
     }, 2000);
 
-    // Set up periodic refresh of notifications
-    const refreshInterval = setInterval(loadNotifications, 30000); // Refresh every 30 seconds
+    // Set up periodic refresh of notifications (only if endpoint exists)
+    // const refreshInterval = setInterval(loadNotifications, 30000); // Refresh every 30 seconds
 
     // Listen for test notifications
     const handleTestNotification = (event: CustomEvent) => {
@@ -294,7 +299,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     return () => {
       s.disconnect();
-      clearInterval(refreshInterval);
+      // clearInterval(refreshInterval);
       window.removeEventListener('test-notification', handleTestNotification as EventListener);
     };
   }, []);
