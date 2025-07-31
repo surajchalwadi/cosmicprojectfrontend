@@ -73,8 +73,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Load notifications immediately
     loadNotifications();
 
+    // Get user info for socket authentication
+    const currentUserStr = sessionStorage.getItem("currentUser");
+    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+
     const s = io(SOCKET_URL, {
-      auth: { token },
+      auth: { 
+        token,
+        userId: currentUser?._id,
+        userRole: currentUser?.role
+      },
       transports: ["websocket"],
       withCredentials: true,
     });
@@ -84,6 +92,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log("✅ Connected to server");
       console.log("🔗 Socket ID:", s.id);
       console.log("🌐 Socket URL:", SOCKET_URL);
+      console.log("👤 User Info:", { 
+        userId: currentUser?._id, 
+        userRole: currentUser?.role,
+        hasToken: !!token 
+      });
       toast.success("Connected to real-time updates");
     });
 
@@ -94,6 +107,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     s.on("connect_error", (error) => {
       console.log("🚨 Socket connection error:", error);
+      console.log("🔍 Error details:", {
+        message: error.message,
+        name: error.name
+      });
     });
 
     // Real-time notification events
@@ -242,6 +259,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         duration: 3000,
         icon: '✅',
       });
+    });
+
+    // Listen for connection acknowledgment from backend
+    s.on("connection:acknowledged", (data: any) => {
+      console.log("✅ Backend acknowledged connection:", data);
     });
 
     setSocket(s);
