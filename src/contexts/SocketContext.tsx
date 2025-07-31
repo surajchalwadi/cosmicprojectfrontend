@@ -144,6 +144,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     });
 
+    s.on("task:status_changed", (data: any) => {
+      toast(`Task "${data.task.title}" status updated to "${data.status}"`, {
+        duration: 4000,
+        icon: '📝',
+      });
+    });
+
     s.on("task:overdue", (data: any) => {
       toast.error(`Task "${data.task.title}" is overdue!`, {
         duration: 8000,
