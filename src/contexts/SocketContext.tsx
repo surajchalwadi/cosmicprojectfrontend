@@ -188,13 +188,34 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Task updates
     s.on("task:assigned", (data: any) => {
+      console.log("📋 Task assigned event received:", data);
       toast.success(`New task "${data.task.title}" assigned to you!`, {
         duration: 5000,
         icon: '📋',
       });
+      
+      // Add to notifications list
+      const notification: Notification = {
+        id: `task-assigned-${Date.now()}`,
+        title: "New Task Assigned",
+        message: `You have been assigned a new task: "${data.task.title}"`,
+        type: 'info',
+        priority: 'medium',
+        category: 'task',
+        metadata: {
+          taskId: data.task._id,
+          projectId: data.project?._id
+        },
+        createdAt: new Date().toISOString(),
+        isRead: false
+      };
+      
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
     });
 
     s.on("task:updated", (data: any) => {
+      console.log("✏️ Task updated event received:", data);
       toast(`Task "${data.task.title}" updated!`, {
         duration: 4000,
         icon: '✏️',
@@ -202,6 +223,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     s.on("task:status_changed", (data: any) => {
+      console.log("🔄 Task status changed event received:", data);
       toast(`Task "${data.task.title}" status changed to ${data.status}`, {
         duration: 4000,
         icon: '🔄',
@@ -266,9 +288,46 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     });
 
+    // Listen for test events from backend
+    s.on("test:task_assigned", (data: any) => {
+      console.log("🧪 Test task assigned received:", data);
+      toast.success("Test task assigned event received!", {
+        duration: 3000,
+        icon: '🧪',
+      });
+    });
+
+    s.on("test:notification", (data: any) => {
+      console.log("🧪 Test notification received:", data);
+      toast.success("Test notification event received!", {
+        duration: 3000,
+        icon: '🧪',
+      });
+    });
+
     // Listen for connection acknowledgment from backend
     s.on("connection:acknowledged", (data: any) => {
       console.log("✅ Backend acknowledged connection:", data);
+    });
+
+    // Debug: Log all incoming events
+    const originalEmit = s.emit;
+    s.emit = function(event: string, ...args: any[]) {
+      console.log("🔍 Frontend emitting:", event, args);
+      return originalEmit.apply(this, [event, ...args]);
+    };
+
+    // Listen for common event variations (debugging)
+    s.on("task_assigned", (data: any) => {
+      console.log("🔍 Received task_assigned (underscore):", data);
+    });
+    
+    s.on("task:assigned", (data: any) => {
+      console.log("🔍 Received task:assigned (colon):", data);
+    });
+    
+    s.on("notification", (data: any) => {
+      console.log("🔍 Received notification (simple):", data);
     });
 
     setSocket(s);
@@ -277,6 +336,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setTimeout(() => {
       console.log("🧪 Testing socket communication...");
       s.emit("test:frontend", { message: "Frontend is working!", timestamp: new Date().toISOString() });
+      
+      // Also test if backend responds to a simple ping
+      s.emit("ping", { timestamp: new Date().toISOString() });
+      
+      // Test if backend emits any events
+      console.log("🧪 Requesting backend to emit test events...");
+      s.emit("request:test_events", { 
+        events: ["task:assigned", "notification:new", "project:created"],
+        timestamp: new Date().toISOString() 
+      });
     }, 2000);
 
     // Set up periodic refresh of notifications (only if endpoint exists)
