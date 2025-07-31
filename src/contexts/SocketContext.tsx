@@ -137,10 +137,59 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setUnreadCount(prev => prev + 1);
     });
 
+    s.on("task:status_changed", (data: any) => {
+      toast(`Task "${data.task.title}" status updated to "${data.status}"`, {
+        duration: 4000,
+        icon: '📝',
+      });
+      
+      const notification: Notification = {
+        id: `task-status-${Date.now()}`,
+        title: "Task Status Updated",
+        message: `Task "${data.task.title}" status changed to "${data.status}"`,
+        type: 'info',
+        priority: 'medium',
+        category: 'task',
+        metadata: {
+          taskId: data.task._id,
+          status: data.status
+        },
+        createdAt: new Date().toISOString(),
+        isRead: false
+      };
+      
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    });
+
     s.on("task:completed", (data: any) => {
       toast.success(`Task "${data.task.title}" completed successfully`, {
         duration: 4000,
         icon: '✅',
+      });
+      
+      const notification: Notification = {
+        id: `task-completed-${Date.now()}`,
+        title: "Task Completed",
+        message: `Task "${data.task.title}" has been completed`,
+        type: 'success',
+        priority: 'medium',
+        category: 'task',
+        metadata: {
+          taskId: data.task._id
+        },
+        createdAt: new Date().toISOString(),
+        isRead: false
+      };
+      
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    });
+
+    s.on("task:updated", (data: any) => {
+      toast(`Task "${data.task.title}" has been updated`, {
+        duration: 4000,
+        icon: '📝',
       });
     });
 
@@ -162,6 +211,20 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       toast(`Project "${data.project.siteName}" updated`, {
         duration: 4000,
         icon: '📝',
+      });
+    });
+
+    s.on("project:status_changed", (data: any) => {
+      toast(`Project "${data.project.siteName}" status changed to "${data.status}"`, {
+        duration: 4000,
+        icon: '🔄',
+      });
+    });
+
+    s.on("user:logout", (data: any) => {
+      toast(`${data.user.name} logged out`, {
+        duration: 3000,
+        icon: '👋',
       });
     });
 
