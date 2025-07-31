@@ -50,43 +50,23 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const currentUserStr = sessionStorage.getItem("currentUser");
     const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
 
-    // Only connect if we have both token and user data
-    if (!token || !currentUser) {
-      return;
-    }
-
-    // Don't connect on login page
-    if (window.location.pathname === '/login') {
-      return;
-    }
-
     const s = io(SOCKET_URL, {
       auth: { 
         token,
-        userId: currentUser._id,
-        userRole: currentUser.role
+        userId: currentUser?._id,
+        userRole: currentUser?.role
       },
-      transports: ["websocket", "polling"], // Add polling as fallback
+      transports: ["websocket"],
       withCredentials: true,
-      timeout: 10000, // Reduce timeout
-      forceNew: true, // Force new connection
     });
 
     s.on("connect", () => {
+      toast.success("Connected to real-time updates");
       setSocket(s);
     });
 
-    s.on("disconnect", (reason) => {
-      if (reason === "io server disconnect") {
-        // Server disconnected us, try to reconnect
-        s.connect();
-      }
-      setSocket(null);
-    });
-
-    s.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
-      setSocket(null);
+    s.on("disconnect", () => {
+      toast.error("Lost connection to real-time updates");
     });
 
     s.on("notification:new", (notification: Notification) => {
@@ -157,59 +137,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setUnreadCount(prev => prev + 1);
     });
 
-    s.on("task:status_changed", (data: any) => {
-      toast(`Task "${data.task.title}" status updated to "${data.status}"`, {
-        duration: 4000,
-        icon: '📝',
-      });
-      
-      const notification: Notification = {
-        id: `task-status-${Date.now()}`,
-        title: "Task Status Updated",
-        message: `Task "${data.task.title}" status changed to "${data.status}"`,
-        type: 'info',
-        priority: 'medium',
-        category: 'task',
-        metadata: {
-          taskId: data.task._id,
-          status: data.status
-        },
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
-      
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
-
     s.on("task:completed", (data: any) => {
       toast.success(`Task "${data.task.title}" completed successfully`, {
         duration: 4000,
         icon: '✅',
       });
-      
-      const notification: Notification = {
-        id: `task-completed-${Date.now()}`,
-        title: "Task Completed",
-        message: `Task "${data.task.title}" has been completed`,
-        type: 'success',
-        priority: 'medium',
-        category: 'task',
-        metadata: {
-          taskId: data.task._id
-        },
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
-      
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
     });
 
-    s.on("task:updated", (data: any) => {
-      toast(`Task "${data.task.title}" has been updated`, {
-        duration: 4000,
-        icon: '📝',
+    s.on("task:overdue", (data: any) => {
+      toast.error(`Task "${data.task.title}" is overdue!`, {
+        duration: 8000,
+        icon: '⏰',
       });
     });
 
@@ -224,27 +162,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       toast(`Project "${data.project.siteName}" updated`, {
         duration: 4000,
         icon: '📝',
-      });
-    });
-
-    s.on("project:status_changed", (data: any) => {
-      toast(`Project "${data.project.siteName}" status changed to "${data.status}"`, {
-        duration: 4000,
-        icon: '🔄',
-      });
-    });
-
-    s.on("task:overdue", (data: any) => {
-      toast.error(`Task "${data.task.title}" is overdue!`, {
-        duration: 8000,
-        icon: '⏰',
-      });
-    });
-
-    s.on("user:logout", (data: any) => {
-      toast(`${data.user.name} logged out`, {
-        duration: 3000,
-        icon: '👋',
       });
     });
 
@@ -274,9 +191,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     return () => {
-      if (s.connected) {
-        s.disconnect();
-      }
+      s.disconnect();
     };
   }, []);
 
