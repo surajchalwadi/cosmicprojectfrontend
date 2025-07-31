@@ -127,8 +127,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     });
 
-    s.on("task_assigned", (data: any) => {
-      console.log("Received task_assigned event:", data);
+    s.on("task:assigned", (data: any) => {
+      console.log("Received task:assigned event:", data);
       toast.success(`Task "${data.task.title}" assigned to you`, {
         duration: 5000,
         icon: '📋',
@@ -154,9 +154,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setUnreadCount(prev => prev + 1);
     });
 
-    s.on("task_status_updated", (data: any) => {
-      console.log("Received task_status_updated event:", data);
-      toast(`Task "${data.task.title}" status updated to "${data.task.status}"`, {
+    s.on("task:status_changed", (data: any) => {
+      console.log("Received task:status_changed event:", data);
+      toast(`Task "${data.task.title}" status updated to "${data.status}"`, {
         duration: 4000,
         icon: '📝',
       });
@@ -164,13 +164,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const notification: Notification = {
         id: `task-status-${Date.now()}`,
         title: "Task Status Updated",
-        message: `Task "${data.task.title}" status changed to "${data.task.status}"`,
+        message: `Task "${data.task.title}" status changed to "${data.status}"`,
         type: 'info',
         priority: 'medium',
         category: 'task',
         metadata: {
           taskId: data.task._id,
-          status: data.task.status
+          status: data.status
         },
         createdAt: new Date().toISOString(),
         isRead: false
@@ -180,11 +180,60 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setUnreadCount(prev => prev + 1);
     });
 
-    s.on("project_created", (data: any) => {
-      console.log("Received project_created event:", data);
+    s.on("task:completed", (data: any) => {
+      console.log("Received task:completed event:", data);
+      toast.success(`Task "${data.task.title}" completed successfully`, {
+        duration: 4000,
+        icon: '✅',
+      });
+      
+      const notification: Notification = {
+        id: `task-completed-${Date.now()}`,
+        title: "Task Completed",
+        message: `Task "${data.task.title}" has been completed`,
+        type: 'success',
+        priority: 'medium',
+        category: 'task',
+        metadata: {
+          taskId: data.task._id
+        },
+        createdAt: new Date().toISOString(),
+        isRead: false
+      };
+      
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    });
+
+    s.on("task:updated", (data: any) => {
+      console.log("Received task:updated event:", data);
+      toast(`Task "${data.task.title}" has been updated`, {
+        duration: 4000,
+        icon: '📝',
+      });
+    });
+
+    s.on("project:created", (data: any) => {
+      console.log("Received project:created event:", data);
       toast.success(`New project "${data.project.siteName}" created`, {
         duration: 4000,
         icon: '🏗️',
+      });
+    });
+
+    s.on("project:updated", (data: any) => {
+      console.log("Received project:updated event:", data);
+      toast(`Project "${data.project.siteName}" updated`, {
+        duration: 4000,
+        icon: '📝',
+      });
+    });
+
+    s.on("project:status_changed", (data: any) => {
+      console.log("Received project:status_changed event:", data);
+      toast(`Project "${data.project.siteName}" status changed to "${data.status}"`, {
+        duration: 4000,
+        icon: '🔄',
       });
     });
 
@@ -195,19 +244,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     });
 
-    s.on("project:updated", (data: any) => {
-      console.log("Received project_updated event:", data);
-      toast(`Project "${data.project.siteName}" updated`, {
-        duration: 4000,
-        icon: '📝',
-      });
-    });
-
-    s.on("report_submitted", (data: any) => {
-      console.log("Received report_submitted event:", data);
-      toast.success(`Report submitted for task "${data.report.task}"`, {
-        duration: 4000,
-        icon: '📊',
+    s.on("user:logout", (data: any) => {
+      console.log("Received user:logout event:", data);
+      toast(`${data.user.name} logged out`, {
+        duration: 3000,
+        icon: '👋',
       });
     });
 
