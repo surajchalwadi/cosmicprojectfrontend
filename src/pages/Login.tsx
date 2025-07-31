@@ -50,14 +50,26 @@ const Login = () => {
     }
 
     try {
+      console.log("Attempting login with:", { email, password, role });
+      console.log("API URL:", `${API_BASE_URL}/auth/login`);
+      
       // Make direct API call first to get user data
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch(`${API_BASE_URL}/auth/login`,{
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password, role }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
+      
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
 
       // Check if response is ok before trying to read JSON
       if (!response.ok) {
@@ -105,9 +117,20 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert(
-        "❌ Connection error!\n\nPlease make sure the backend server is running.",
-      );
+      
+      let errorMessage = "Connection error! Please make sure the backend server is running.";
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "Request timed out! The server is taking too long to respond.";
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = "Network error! Please check your internet connection.";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
+      alert(`❌ Login failed!\n\n${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
