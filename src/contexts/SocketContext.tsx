@@ -22,6 +22,7 @@ interface SocketContextValue {
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
+  testNotification: () => void;
 }
 
 const SocketContext = createContext<SocketContextValue>({ 
@@ -30,7 +31,8 @@ const SocketContext = createContext<SocketContextValue>({
   unreadCount: 0,
   markAsRead: () => {},
   markAllAsRead: () => {},
-  clearNotifications: () => {}
+  clearNotifications: () => {},
+  testNotification: () => {}
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -42,38 +44,62 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    
-    if (!token) {
-      return;
-    }
+    if (!token) return;
 
-    const currentUserStr = sessionStorage.getItem("currentUser");
-    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+    // Load existing notifications
+    const loadNotifications = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/notifications`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.notifications) {
+            setNotifications(data.notifications);
+            const unread = data.notifications.filter((n: Notification) => !n.isRead).length;
+            setUnreadCount(unread);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      }
+    };
+
+    // Load notifications immediately
+    loadNotifications();
 
     const s = io(SOCKET_URL, {
-      auth: { 
-        token,
-        userId: currentUser?._id,
-        userRole: currentUser?.role
-      },
+      auth: { token },
       transports: ["websocket"],
       withCredentials: true,
     });
 
+    // Socket connection events
     s.on("connect", () => {
+      console.log("Connected to server");
       toast.success("Connected to real-time updates");
-      setSocket(s);
     });
 
     s.on("disconnect", () => {
+      console.log("Disconnected from server");
       toast.error("Lost connection to real-time updates");
     });
 
+    // Real-time notification events
     s.on("notification:new", (notification: Notification) => {
+      console.log("New notification received:", notification);
+      
+      // Add to notifications list with isRead set to false
       const newNotification = { ...notification, isRead: false };
       setNotifications(prev => [newNotification, ...prev]);
       setUnreadCount(prev => prev + 1);
 
+      // Show toast notification based on type
       switch (notification.type) {
         case 'success':
           toast.success(notification.message, {
@@ -106,142 +132,92 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         default:
           toast(notification.message, {
             duration: 4000,
-            icon: '📢',
           });
       }
     });
 
-    s.on("task:assigned", (data: any) => {
-      toast.success(`Task "${data.task.title}" assigned to you`, {
-        duration: 5000,
-        icon: '📋',
-      });
-      
-      const notification: Notification = {
-        id: `task-assigned-${Date.now()}`,
-        title: "New Task Assigned",
-        message: `You have been assigned a new task: "${data.task.title}"`,
-        type: 'info',
-        priority: data.task.priority || 'medium',
-        category: 'task',
-        metadata: {
-          taskId: data.task._id,
-          projectId: data.project?._id,
-          technicianId: data.technician?._id
-        },
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
-      
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
-
-    s.on("task:status_changed", (data: any) => {
-      toast(`Task "${data.task.title}" status updated to "${data.status}"`, {
-        duration: 4000,
-        icon: '📝',
-      });
-      
-      const notification: Notification = {
-        id: `task-status-${Date.now()}`,
-        title: "Task Status Updated",
-        message: `Task "${data.task.title}" status changed to "${data.status}"`,
-        type: 'info',
-        priority: 'medium',
-        category: 'task',
-        metadata: {
-          taskId: data.task._id,
-          status: data.status
-        },
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
-      
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
-
-    s.on("task:completed", (data: any) => {
-      toast.success(`Task "${data.task.title}" completed successfully`, {
-        duration: 4000,
-        icon: '✅',
-      });
-      
-      const notification: Notification = {
-        id: `task-completed-${Date.now()}`,
-        title: "Task Completed",
-        message: `Task "${data.task.title}" has been completed`,
-        type: 'success',
-        priority: 'medium',
-        category: 'task',
-        metadata: {
-          taskId: data.task._id
-        },
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
-      
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
-
-    s.on("task:updated", (data: any) => {
-      toast(`Task "${data.task.title}" has been updated`, {
-        duration: 4000,
-        icon: '📝',
-      });
-    });
-
-    s.on("task:overdue", (data: any) => {
-      toast.error(`Task "${data.task.title}" is overdue!`, {
-        duration: 8000,
-        icon: '⏰',
-      });
-    });
-
+    // Project updates
     s.on("project:created", (data: any) => {
-      toast.success(`New project "${data.project.siteName}" created`, {
-        duration: 4000,
+      toast.success(`New project "${data.project.siteName}" created!`, {
+        duration: 5000,
         icon: '🏗️',
       });
     });
 
     s.on("project:updated", (data: any) => {
-      toast(`Project "${data.project.siteName}" updated`, {
+      toast.success(`Project "${data.project.siteName}" updated!`, {
         duration: 4000,
         icon: '📝',
       });
     });
 
     s.on("project:status_changed", (data: any) => {
-      toast(`Project "${data.project.siteName}" status changed to "${data.status}"`, {
+      toast(`Project "${data.project.siteName}" status changed to ${data.status}`, {
         duration: 4000,
         icon: '🔄',
       });
     });
 
-    s.on("user:logout", (data: any) => {
-      toast(`${data.user.name} logged out`, {
-        duration: 3000,
-        icon: '👋',
+    // Task updates
+    s.on("task:assigned", (data: any) => {
+      toast.success(`New task "${data.task.title}" assigned to you!`, {
+        duration: 5000,
+        icon: '📋',
       });
     });
 
+    s.on("task:updated", (data: any) => {
+      toast(`Task "${data.task.title}" updated!`, {
+        duration: 4000,
+        icon: '✏️',
+      });
+    });
+
+    s.on("task:status_changed", (data: any) => {
+      toast(`Task "${data.task.title}" status changed to ${data.status}`, {
+        duration: 4000,
+        icon: '🔄',
+      });
+    });
+
+    s.on("task:completed", (data: any) => {
+      toast.success(`Task "${data.task.title}" completed!`, {
+        duration: 5000,
+        icon: '✅',
+      });
+    });
+
+    // Report updates
+    s.on("report:submitted", (data: any) => {
+      toast.success(`Report submitted for task "${data.report.task}"!`, {
+        duration: 5000,
+        icon: '📊',
+      });
+    });
+
+    // User updates
     s.on("user:login", (data: any) => {
-      toast(`${data.user.name} logged in`, {
+      toast(`User ${data.user.name} logged in`, {
         duration: 3000,
         icon: '👤',
       });
     });
 
+    s.on("user:logout", (data: any) => {
+      toast(`User ${data.user.name} logged out`, {
+        duration: 3000,
+        icon: '👋',
+      });
+    });
+
+    // System notifications
     s.on("system:maintenance", (data: any) => {
       toast(data.message, {
         duration: 8000,
         icon: '🔧',
         style: {
-          background: '#3b82f6',
-          color: 'white',
+          background: '#f59e0b',
+          color: '#1f2937',
         },
       });
     });
@@ -253,11 +229,34 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     });
 
+    setSocket(s);
+
+    // Set up periodic refresh of notifications
+    const refreshInterval = setInterval(loadNotifications, 30000); // Refresh every 30 seconds
+
+    // Listen for test notifications
+    const handleTestNotification = (event: CustomEvent) => {
+      const notification = event.detail;
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      
+      // Show toast notification
+      toast(notification.message, {
+        duration: 4000,
+        icon: '🧪',
+      });
+    };
+
+    window.addEventListener('test-notification', handleTestNotification as EventListener);
+
     return () => {
       s.disconnect();
+      clearInterval(refreshInterval);
+      window.removeEventListener('test-notification', handleTestNotification as EventListener);
     };
   }, []);
 
+  // Mark notification as read
   const markAsRead = async (notificationId: string) => {
     try {
       const token = localStorage.getItem("token");
@@ -281,17 +280,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notificationId 
-            ? { ...notif, isRead: true }
-            : notif
-        )
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
     }
   };
 
+  // Mark all notifications as read
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -311,16 +303,35 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
-      setNotifications(prev => 
-        prev.map(notif => ({ ...notif, isRead: true }))
-      );
-      setUnreadCount(0);
     }
   };
 
+  // Clear all notifications
   const clearNotifications = () => {
     setNotifications([]);
     setUnreadCount(0);
+  };
+
+  // Test notification function
+  const testNotification = () => {
+    const testNotif: Notification = {
+      id: Date.now().toString(),
+      title: "Test Notification",
+      message: "This is a test notification to verify the system is working properly.",
+      type: 'info',
+      priority: 'medium',
+      category: 'general',
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    };
+    
+    setNotifications(prev => [testNotif, ...prev]);
+    setUnreadCount(prev => prev + 1);
+    
+    toast("Test notification added!", {
+      duration: 3000,
+      icon: '🧪',
+    });
   };
 
   return (
@@ -330,7 +341,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       unreadCount,
       markAsRead,
       markAllAsRead,
-      clearNotifications
+      clearNotifications,
+      testNotification
     }}>
       {children}
     </SocketContext.Provider>

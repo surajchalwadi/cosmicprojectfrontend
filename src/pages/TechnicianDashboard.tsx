@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import toast from 'react-hot-toast';
 import { useSocket } from "@/contexts/SocketContext";
+import NotificationTest from "@/components/ui/NotificationTest";
 
 interface Task {
   id: string;
@@ -374,6 +375,9 @@ const TechnicianDashboard = () => {
 
         {/* Stats Cards */}
         <StatsCards stats={stats} />
+
+        {/* Notification Debug Panel */}
+        <NotificationTest />
 
         {/* Tasks Management */}
         <Card className="mobile-card">
