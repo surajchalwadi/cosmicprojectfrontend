@@ -23,6 +23,7 @@ interface SocketContextValue {
   markAllAsRead: () => void;
   clearNotifications: () => void;
   testNotification: () => void;
+  getConnectionStatus: () => any;
 }
 
 const SocketContext = createContext<SocketContextValue>({ 
@@ -32,7 +33,8 @@ const SocketContext = createContext<SocketContextValue>({
   markAsRead: () => {},
   markAllAsRead: () => {},
   clearNotifications: () => {},
-  testNotification: () => {}
+  testNotification: () => {},
+  getConnectionStatus: () => ({})
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -346,6 +348,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         events: ["task:assigned", "notification:new", "project:created"],
         timestamp: new Date().toISOString() 
       });
+
+      // Test common backend event names
+      console.log("🧪 Testing common backend event names...");
+      s.emit("task:created", { test: true, timestamp: new Date().toISOString() });
+      s.emit("task_created", { test: true, timestamp: new Date().toISOString() });
+      s.emit("notification", { test: true, timestamp: new Date().toISOString() });
     }, 2000);
 
     // Set up periodic refresh of notifications (only if endpoint exists)
@@ -451,6 +459,19 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   };
 
+  // Debug function to get connection status
+  const getConnectionStatus = () => {
+    const status = {
+      connected: socket?.connected || false,
+      socketId: socket?.id || 'Not connected',
+      url: SOCKET_URL,
+      hasToken: !!localStorage.getItem("token"),
+      userInfo: sessionStorage.getItem("currentUser") ? JSON.parse(sessionStorage.getItem("currentUser")!) : null
+    };
+    console.log("🔍 Connection Status:", status);
+    return status;
+  };
+
   return (
     <SocketContext.Provider value={{ 
       socket, 
@@ -459,7 +480,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       markAsRead,
       markAllAsRead,
       clearNotifications,
-      testNotification
+      testNotification,
+      getConnectionStatus
     }}>
       {children}
     </SocketContext.Provider>
