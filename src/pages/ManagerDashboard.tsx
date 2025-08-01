@@ -138,6 +138,15 @@ const ManagerDashboard = () => {
     await fetchUserProfile();
   };
 
+  const handleProfilePictureRemove = async () => {
+    const token = localStorage.getItem("token");
+    await fetch(`${API_BASE_URL}/profile/picture`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    await fetchUserProfile();
+  };
+
   // Fetch manager data from backend
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -525,6 +534,7 @@ const ManagerDashboard = () => {
       userEmail={userProfile?.email || "manager@cosmicsolutions.com"}
       userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
       onProfilePictureUpload={handleProfilePictureUpload}
+      onProfilePictureRemove={handleProfilePictureRemove}
     >
       <div className="mobile-container mobile-space-y max-w-7xl mx-auto">
         {/* Welcome Section */}

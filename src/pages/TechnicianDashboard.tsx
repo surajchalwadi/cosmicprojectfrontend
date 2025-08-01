@@ -126,6 +126,15 @@ const TechnicianDashboard = () => {
     await fetchUserProfile();
   };
 
+  const handleProfilePictureRemove = async () => {
+    const token = localStorage.getItem("token");
+    await fetch(`${API_BASE_URL}/profile/picture`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    await fetchUserProfile();
+  };
+
   // Fetch technician data from backend
   useEffect(() => {
     fetchUserProfile();
@@ -358,6 +367,7 @@ const TechnicianDashboard = () => {
       userEmail={userProfile?.email || "technician@cosmicsolutions.com"}
       userProfilePicture={userProfile?.profilePicture ? `${FILE_BASE_URL}/${userProfile.profilePicture}` : undefined}
       onProfilePictureUpload={handleProfilePictureUpload}
+      onProfilePictureRemove={handleProfilePictureRemove}
     >
       <div className="mobile-container mobile-space-y max-w-7xl mx-auto">
         {/* Welcome Section */}

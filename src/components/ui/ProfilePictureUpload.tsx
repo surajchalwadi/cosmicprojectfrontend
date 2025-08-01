@@ -1,7 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Upload, X } from "lucide-react";
+import { Camera, Upload, X, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ interface ProfilePictureUploadProps {
   currentImage?: string;
   userName: string;
   onImageUpload: (file: File) => Promise<void>;
+  onImageRemove?: () => Promise<void>;
   size?: "sm" | "md" | "lg";
 }
 
@@ -25,12 +26,20 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   currentImage,
   userName,
   onImageUpload,
+  onImageRemove,
   size = "md",
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [displayImage, setDisplayImage] = useState<string | null>(currentImage || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update display image when currentImage prop changes
+  useEffect(() => {
+    setDisplayImage(currentImage || null);
+  }, [currentImage]);
 
   const sizeClasses = {
     sm: "h-8 w-8",
@@ -93,6 +102,26 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
     }
   };
 
+  const handleRemoveCurrentImage = async () => {
+    if (!onImageRemove) {
+      toast.error("Remove functionality not available");
+      return;
+    }
+
+    setIsRemoving(true);
+    try {
+      await onImageRemove();
+      setDisplayImage(null);
+      toast.success("Profile picture removed successfully!");
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to remove profile picture");
+      console.error("Remove error:", error);
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -111,7 +140,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           >
             <Avatar className={sizeClasses[size]}>
               <AvatarImage 
-                src={currentImage || previewImage} 
+                src={previewImage || displayImage} 
                 alt={userName}
               />
               <AvatarFallback className="bg-primary text-primary-foreground">
@@ -135,7 +164,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
             <div className="flex justify-center">
               <Avatar className="h-24 w-24">
                 <AvatarImage 
-                  src={previewImage || currentImage} 
+                  src={previewImage || displayImage} 
                   alt={userName}
                 />
                 <AvatarFallback className="bg-primary text-primary-foreground text-lg">
@@ -168,6 +197,22 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Remove Current Image Button */}
+            {displayImage && !previewImage && (
+              <div className="space-y-2">
+                <Label>Current Profile Picture</Label>
+                <Button
+                  variant="outline"
+                  onClick={handleRemoveCurrentImage}
+                  disabled={isRemoving}
+                  className="w-full"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isRemoving ? "Removing..." : "Remove Current Picture"}
+                </Button>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex justify-end space-x-2">

@@ -37,6 +37,7 @@ interface DashboardLayoutProps {
   userEmail?: string;
   userProfilePicture?: string;
   onProfilePictureUpload?: (file: File) => Promise<void>;
+  onProfilePictureRemove?: () => Promise<void>;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
@@ -46,12 +47,37 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   userEmail = "user@cosmicsolutions.com",
   userProfilePicture,
   onProfilePictureUpload,
+  onProfilePictureRemove,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = React.useState(false);
   const [profilePicture, setProfilePicture] = React.useState(userProfilePicture);
+
+  // Fetch user profile on component mount to get the latest profile picture
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await fetch(`${API_BASE_URL}/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (data.status === "success" && data.data.profilePicture) {
+          setProfilePicture(`${FILE_BASE_URL}/${data.data.profilePicture}`);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   // Use onProfilePictureUpload if provided, otherwise fallback to local upload logic
   const handleProfilePictureUpload = onProfilePictureUpload || (async (file: File) => {
@@ -74,6 +100,28 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
     } catch (error) {
       console.error("Profile picture upload error:", error);
+      throw error;
+    }
+  });
+
+  // Handle profile picture removal
+  const handleProfilePictureRemove = onProfilePictureRemove || (async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/profile/picture`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setProfilePicture(undefined);
+      } else {
+        throw new Error(data.message || "Failed to remove profile picture");
+      }
+    } catch (error) {
+      console.error("Profile picture removal error:", error);
       throw error;
     }
   });
@@ -102,69 +150,36 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     },
     manager: {
       title: "Manager",
-      icon: Settings,
-      color: "bg-success text-success-foreground",
+      icon: Building2,
+      color: "bg-blue-600 text-white",
       navigation: [
         { title: "Dashboard", href: "/manager", icon: LayoutDashboard },
         {
-          title: "My Projects",
+          title: "Projects",
           href: "/manager/projects",
           icon: ClipboardList,
         },
-        { title: "Technicians", href: "/manager/technicians", icon: Users },
-        { title: "Tasks", href: "/manager/tasks", icon: FileText },
+        {
+          title: "Technicians",
+          href: "/manager/technicians",
+          icon: Users,
+        },
+        { title: "Reports", href: "/manager/reports", icon: FileText },
       ],
     },
     technician: {
       title: "Technician",
       icon: Wrench,
-      color: "bg-pending text-pending-foreground",
+      color: "bg-green-600 text-white",
       navigation: [
         { title: "Dashboard", href: "/technician", icon: LayoutDashboard },
-        { title: "My Tasks", href: "/technician/tasks", icon: ClipboardList },
+        { title: "Tasks", href: "/technician/tasks", icon: ClipboardList },
+        { title: "Reports", href: "/technician/reports", icon: FileText },
       ],
     },
   };
 
-  const normalizedRole = normalizeRole(userRole);
-  const config = roleConfig[normalizedRole];
-
-  // Add error handling for invalid userRole
-  if (!config) {
-    console.error(
-      `Invalid userRole: "${userRole}". Available roles:`,
-      Object.keys(roleConfig),
-    );
-    // Fallback to a default config to prevent crashes
-    const defaultConfig = {
-      title: "User",
-      icon: Shield,
-      color: "bg-muted text-muted-foreground",
-      navigation: [
-        { title: "Dashboard", href: "/login", icon: LayoutDashboard },
-      ],
-    };
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Invalid User Role</h1>
-          <p className="text-muted-foreground mt-2">
-            Role: "{userRole}" (type: {typeof userRole})
-          </p>
-          <p className="text-muted-foreground">
-            Available roles: {Object.keys(roleConfig).join(", ")}
-          </p>
-          <button
-            onClick={() => (window.location.href = "/login")}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
-          >
-            Return to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  const config = roleConfig[normalizeRole(userRole)];
   const RoleIcon = config.icon;
 
   const handleLogout = async () => {
@@ -172,110 +187,102 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       await logout();
       navigate("/login");
     } catch (error) {
-      console.error("Logout failed:", error);
-      // Navigate anyway to clear the UI state
+      console.error("Logout error:", error);
       navigate("/login");
     }
   };
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="mobile-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
       {/* Sidebar */}
       <div
         className={cn(
-          "mobile-sidebar lg:static lg:w-64 lg:transform-none flex flex-col",
-          isSidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-sidebar-foreground transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Logo */}
-        <div className="flex items-center justify-between mobile-padding border-b border-sidebar-border">
-          <img
-            src="https://cdn.builder.io/api/v1/image/assets%2Fdf520b57241b409c97fe8b1702f73e79%2Fce826268d92b499a98eeb82a92fb89e5?format=webp&width=800"
-            alt="Cosmic Solutions"
-            className="h-8 sm:h-10 w-auto max-w-full"
-          />
-          {/* Mobile Close Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        {/* User Info */}
-        <div className="mobile-padding border-b border-sidebar-border">
-          <div className="flex items-center space-x-3">
-            <ProfilePictureUpload
-              currentImage={profilePicture}
-              userName={userName}
-              onImageUpload={handleProfilePictureUpload}
-              size="md"
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="flex items-center justify-between mobile-padding border-b border-sidebar-border">
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2Fdf520b57241b409c97fe8b1702f73e79%2Fce826268d92b499a98eeb82a92fb89e5?format=webp&width=800"
+              alt="Cosmic Solutions"
+              className="h-8 sm:h-10 w-auto max-w-full"
             />
-            <div className="flex-1 min-w-0">
-              <p className="mobile-text-sm font-medium text-sidebar-foreground truncate">
-                {userName}
-              </p>
-              <Badge
-                variant="outline"
-                className={`${config.color} border-0 mobile-text-sm`}
-              >
-                <RoleIcon className="h-3 w-3 mr-1" />
-                {config.title}
-              </Badge>
+            {/* Mobile Close Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* User Info */}
+          <div className="mobile-padding border-b border-sidebar-border">
+            <div className="flex items-center space-x-3">
+              <ProfilePictureUpload
+                currentImage={profilePicture}
+                userName={userName}
+                onImageUpload={handleProfilePictureUpload}
+                onImageRemove={handleProfilePictureRemove}
+                size="md"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="mobile-text-sm font-medium text-sidebar-foreground truncate">
+                  {userName}
+                </p>
+                <Badge
+                  variant="outline"
+                  className={`${config.color} border-0 mobile-text-sm`}
+                >
+                  <RoleIcon className="h-3 w-3 mr-1" />
+                  {config.title}
+                </Badge>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 mobile-padding mobile-space-y">
-          {config.navigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.href;
+          {/* Navigation */}
+          <nav className="flex-1 mobile-padding mobile-space-y">
+            {config.navigation.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.href;
 
-            return (
-              <Button
-                key={item.href}
-                variant={isActive ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start mobile-text-sm text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent",
-                  isActive &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground",
-                )}
-                onClick={() => {
-                  navigate(item.href);
-                  setSidebarOpen(false); // Close mobile sidebar
-                }}
-              >
-                <Icon className="h-4 w-4 mr-3" />
-                {item.title}
-              </Button>
-            );
-          })}
-        </nav>
+              return (
+                <Button
+                  key={item.href}
+                  variant={isActive ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start mobile-text-sm text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent",
+                    isActive &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground",
+                  )}
+                  onClick={() => {
+                    navigate(item.href);
+                    setSidebarOpen(false); // Close mobile sidebar
+                  }}
+                >
+                  <Icon className="h-4 w-4 mr-3" />
+                  {item.title}
+                </Button>
+              );
+            })}
+          </nav>
 
-        {/* Logout */}
-        <div className="mobile-padding border-t border-sidebar-border">
-          <Button
-            variant="ghost"
-            className="w-full justify-start mobile-text-sm text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4 mr-3" />
-            Sign Out
-          </Button>
+          {/* Logout */}
+          <div className="mobile-padding border-t border-sidebar-border">
+            <Button
+              variant="ghost"
+              className="w-full justify-start mobile-text-sm text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 mr-3" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -299,24 +306,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </h1>
           </div>
 
+          {/* Header Actions */}
           <div className="flex items-center mobile-space-x">
-            {/* Notifications */}
-            <NotificationBell className="text-muted-foreground" />
-
-            {/* User Menu */}
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative mobile-avatar rounded-full"
-                >
-                  <Avatar className="mobile-avatar">
-                    <AvatarImage src={profilePicture} />
-                    <AvatarFallback>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profilePicture} alt={userName} />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
                       {userName
                         .split(" ")
                         .map((n) => n[0])
-                        .join("")}
+                        .join("")
+                        .toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -324,22 +327,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="mobile-text-sm font-medium leading-none">
-                      {userName}
-                    </p>
-                    <p className="mobile-text-sm leading-none text-muted-foreground">
+                    <p className="text-sm font-medium leading-none">{userName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
                       {userEmail}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => navigate(`/${normalizedRole}/settings`)}
-                >
-                  Settings
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
-                  Sign out
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -347,12 +344,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </header>
 
         {/* Page Content */}
-        <main className="mobile-content">
-          <div
-            className="lg:hidden h-0 w-0"
-            onClick={() => setSidebarOpen(false)}
-          />
-          {children}
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto p-6">{children}</div>
         </main>
       </div>
     </div>
