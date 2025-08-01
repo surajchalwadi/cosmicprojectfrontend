@@ -71,19 +71,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     
     // If the filename already includes 'uploads/', use it as is
     if (filename.includes('uploads/')) {
-      const url = `${API_BASE_URL}/${filename}`;
+      const url = `${FILE_BASE_URL}/${filename}`;
       console.log("Using path with uploads:", url);
       return url;
     }
     
     // Try different possible endpoints for just filenames
     const possibleEndpoints = [
-      `${API_BASE_URL}/uploads/${filename}`,
-      `${API_BASE_URL}/profile/picture/${filename}`,
-      `${API_BASE_URL}/static/uploads/${filename}`,
-      `${API_BASE_URL}/images/${filename}`,
-      `${API_BASE_URL}/public/uploads/${filename}`,
-      `${API_BASE_URL}/files/${filename}`
+      `${FILE_BASE_URL}/uploads/${filename}`,
+      `${FILE_BASE_URL}/profile/picture/${filename}`,
+      `${FILE_BASE_URL}/static/uploads/${filename}`,
+      `${FILE_BASE_URL}/images/${filename}`,
+      `${FILE_BASE_URL}/public/uploads/${filename}`,
+      `${FILE_BASE_URL}/files/${filename}`
     ];
     
     const selectedUrl = possibleEndpoints[0];
