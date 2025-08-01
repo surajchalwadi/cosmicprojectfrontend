@@ -131,24 +131,81 @@ const ManagerDashboard = () => {
   };
 
   const handleProfilePictureUpload = async (file: File) => {
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("profilePicture", file);
-    await fetch(`${API_BASE_URL}/profile/picture`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-    await fetchUserProfile();
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const formData = new FormData();
+      formData.append("profilePicture", file);
+
+      const response = await fetch(`${API_BASE_URL}/profile/picture`, {
+        method: "POST",
+        headers: { 
+          Authorization: `Bearer ${token}` 
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      }
+
+      if (data.status === "success") {
+        // Update the profile picture URL to use API endpoint
+        if (data.data.profilePicture) {
+          data.data.profilePicture = `${API_BASE_URL}/profile/picture/${data.data.profilePicture}`;
+        }
+        setUserProfile(data.data);
+        toast.success("Profile picture uploaded successfully!");
+      } else {
+        throw new Error(data.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Profile picture upload error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to upload profile picture");
+      throw error;
+    }
   };
 
   const handleProfilePictureRemove = async () => {
-    const token = localStorage.getItem("token");
-    await fetch(`${API_BASE_URL}/profile/picture`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    await fetchUserProfile();
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/profile/picture`, {
+        method: "DELETE",
+        headers: { 
+          Authorization: `Bearer ${token}` 
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Remove failed with status ${response.status}`);
+      }
+
+      if (data.status === "success") {
+        // Clear the profile picture
+        setUserProfile(prev => ({
+          ...prev,
+          profilePicture: undefined
+        }));
+        toast.success("Profile picture removed successfully!");
+      } else {
+        throw new Error(data.message || "Remove failed");
+      }
+    } catch (error) {
+      console.error("Profile picture removal error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to remove profile picture");
+      throw error;
+    }
   };
 
   // Fetch manager data from backend

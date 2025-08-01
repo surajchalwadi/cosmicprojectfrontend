@@ -29,6 +29,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -84,8 +85,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const handleProfilePictureUpload = onProfilePictureUpload || (async (file: File) => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
       const formData = new FormData();
       formData.append("profilePicture", file);
+
       const response = await fetch(`${API_BASE_URL}/profile/picture`, {
         method: "POST",
         headers: {
@@ -93,15 +99,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         },
         body: formData,
       });
+
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      }
+
       if (data.status === "success") {
         // Use API endpoint instead of direct file access to avoid CORS issues
         setProfilePicture(`${API_BASE_URL}/profile/picture/${data.data.profilePicture}`);
+        toast.success("Profile picture uploaded successfully!");
       } else {
-        throw new Error(data.message || "Failed to upload profile picture");
+        throw new Error(data.message || "Upload failed");
       }
     } catch (error) {
       console.error("Profile picture upload error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to upload profile picture");
       throw error;
     }
   });
@@ -110,20 +124,32 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const handleProfilePictureRemove = onProfilePictureRemove || (async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
       const response = await fetch(`${API_BASE_URL}/profile/picture`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Remove failed with status ${response.status}`);
+      }
+
       if (data.status === "success") {
         setProfilePicture(undefined);
+        toast.success("Profile picture removed successfully!");
       } else {
-        throw new Error(data.message || "Failed to remove profile picture");
+        throw new Error(data.message || "Remove failed");
       }
     } catch (error) {
       console.error("Profile picture removal error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to remove profile picture");
       throw error;
     }
   });
