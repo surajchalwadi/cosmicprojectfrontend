@@ -122,18 +122,6 @@ const ManagerDashboard = () => {
     const res = await fetch(`${API_BASE_URL}/profile`, { headers });
     const data = await res.json();
     if (data.status === "success") {
-      // Handle different backend response formats
-      if (data.data.profilePicture) {
-        let profilePictureUrl = data.data.profilePicture;
-        
-        // If it's just a filename, construct the full URL
-        if (!profilePictureUrl.startsWith('http')) {
-          // Try different possible endpoints
-          profilePictureUrl = `${API_BASE_URL}/uploads/${data.data.profilePicture}`;
-        }
-        
-        data.data.profilePicture = profilePictureUrl;
-      }
       setUserProfile(data.data);
     }
   };
@@ -163,19 +151,8 @@ const ManagerDashboard = () => {
       }
 
       if (data.status === "success") {
-        // Handle different backend response formats
-        if (data.data.profilePicture) {
-          let profilePictureUrl = data.data.profilePicture;
-          
-          // If it's just a filename, construct the full URL
-          if (!profilePictureUrl.startsWith('http')) {
-            // Try different possible endpoints
-            profilePictureUrl = `${API_BASE_URL}/uploads/${data.data.profilePicture}`;
-          }
-          
-          data.data.profilePicture = profilePictureUrl;
-        }
-        setUserProfile(data.data);
+        // Refetch user profile to get updated data
+        await fetchUserProfile();
         toast.success("Profile picture uploaded successfully!");
       } else {
         throw new Error(data.message || "Upload failed");

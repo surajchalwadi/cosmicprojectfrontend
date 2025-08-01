@@ -34,12 +34,26 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [displayImage, setDisplayImage] = useState<string | null>(currentImage || null);
+  const [imageLoadError, setImageLoadError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update display image when currentImage prop changes
   useEffect(() => {
     setDisplayImage(currentImage || null);
+    setImageLoadError(false);
   }, [currentImage]);
+
+  // Handle image load error
+  const handleImageError = () => {
+    console.warn("Profile picture failed to load in upload component");
+    setImageLoadError(true);
+    setDisplayImage(null);
+  };
+
+  // Handle image load success
+  const handleImageLoad = () => {
+    setImageLoadError(false);
+  };
 
   const sizeClasses = {
     sm: "h-8 w-8",
@@ -142,6 +156,8 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
               <AvatarImage 
                 src={previewImage || displayImage} 
                 alt={userName}
+                onError={handleImageError}
+                onLoad={handleImageLoad}
               />
               <AvatarFallback className="bg-primary text-primary-foreground">
                 {getInitials(userName)}
@@ -166,6 +182,8 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                 <AvatarImage 
                   src={previewImage || displayImage} 
                   alt={userName}
+                  onError={handleImageError}
+                  onLoad={handleImageLoad}
                 />
                 <AvatarFallback className="bg-primary text-primary-foreground text-lg">
                   {getInitials(userName)}

@@ -55,6 +55,40 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { logout } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = React.useState(false);
   const [profilePicture, setProfilePicture] = React.useState(userProfilePicture);
+  const [imageLoadError, setImageLoadError] = React.useState(false);
+
+  // Utility function to construct profile picture URL
+  const constructProfilePictureUrl = (filename: string): string => {
+    if (!filename) return '';
+    
+    // If it's already a full URL, return as is
+    if (filename.startsWith('http')) {
+      return filename;
+    }
+    
+    // Try different possible endpoints
+    const possibleEndpoints = [
+      `${API_BASE_URL}/uploads/${filename}`,
+      `${API_BASE_URL}/profile/picture/${filename}`,
+      `${API_BASE_URL}/static/uploads/${filename}`,
+      `${API_BASE_URL}/images/${filename}`
+    ];
+    
+    // For now, use the first one as default
+    return possibleEndpoints[0];
+  };
+
+  // Handle image load error
+  const handleImageError = () => {
+    console.warn("Profile picture failed to load, clearing it");
+    setProfilePicture(undefined);
+    setImageLoadError(true);
+  };
+
+  // Handle image load success
+  const handleImageLoad = () => {
+    setImageLoadError(false);
+  };
 
   // Fetch user profile on component mount to get the latest profile picture
   React.useEffect(() => {
@@ -70,15 +104,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         });
         const data = await response.json();
         if (data.status === "success" && data.data.profilePicture) {
-          // Handle different backend response formats
-          let profilePictureUrl = data.data.profilePicture;
-          
-          // If it's just a filename, construct the full URL
-          if (!profilePictureUrl.startsWith('http')) {
-            // Try different possible endpoints
-            profilePictureUrl = `${API_BASE_URL}/uploads/${data.data.profilePicture}`;
-          }
-          
+          const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
           setProfilePicture(profilePictureUrl);
         }
       } catch (error) {
@@ -115,15 +141,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
 
       if (data.status === "success") {
-        // Handle different backend response formats
-        let profilePictureUrl = data.data.profilePicture;
-        
-        // If it's just a filename, construct the full URL
-        if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
-          // Try different possible endpoints
-          profilePictureUrl = `${API_BASE_URL}/uploads/${data.data.profilePicture}`;
-        }
-        
+        const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
         setProfilePicture(profilePictureUrl);
         toast.success("Profile picture uploaded successfully!");
       } else {
@@ -357,7 +375,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={profilePicture} alt={userName} />
+                    <AvatarImage src={profilePicture} alt={userName} onError={handleImageError} onLoad={handleImageLoad} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {userName
                         .split(" ")
