@@ -164,6 +164,62 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     setImageLoadError(false);
   };
 
+  // Function to fetch profile picture as blob to avoid CORS
+  const fetchProfilePictureAsBlob = async (filename: string): Promise<string | null> => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return null;
+
+      // Try to fetch through API endpoint first
+      const apiUrl = `${API_BASE_URL}/profile/picture/${filename.split('/').pop()}`;
+      console.log("Trying to fetch through API:", apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        console.log("API endpoint failed, trying direct URL");
+        // Fallback to direct URL
+        const directUrl = `${FILE_BASE_URL}/${filename}`;
+        const directResponse = await fetch(directUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (!directResponse.ok) {
+          throw new Error(`Failed to fetch image: ${directResponse.status}`);
+        }
+        
+        const blob = await directResponse.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        // Cleanup previous blob URL
+        if (currentBlobUrl) {
+          URL.revokeObjectURL(currentBlobUrl);
+        }
+        setCurrentBlobUrl(blobUrl);
+        return blobUrl;
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Cleanup previous blob URL
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+      }
+      setCurrentBlobUrl(blobUrl);
+      return blobUrl;
+    } catch (error) {
+      console.error("Error fetching profile picture as blob:", error);
+      return null;
+    }
+  };
+
   // Fetch user profile on component mount to get the latest profile picture
   React.useEffect(() => {
     const fetchUserProfile = async () => {
@@ -180,9 +236,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         console.log("Profile fetch response:", data);
         if (data.status === "success" && data.data.profilePicture) {
           console.log("Profile fetch - backend returned profilePicture:", data.data.profilePicture);
-          const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
-          console.log("Profile fetch - constructed URL:", profilePictureUrl);
-          setProfilePicture(profilePictureUrl);
+          
+          // Try to fetch as blob to avoid CORS issues
+          const blobUrl = await fetchProfilePictureAsBlob(data.data.profilePicture);
+          if (blobUrl) {
+            console.log("Successfully fetched profile picture as blob");
+            setProfilePicture(blobUrl);
+          } else {
+            console.log("Blob fetch failed, using direct URL");
+            const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
+            setProfilePicture(profilePictureUrl);
+          }
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -208,21 +272,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       
       if (data.status === "success" && data.data.profilePicture) {
         console.log("Refresh - backend returned profilePicture:", data.data.profilePicture);
-        const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
-        console.log("Refresh - constructed URL:", profilePictureUrl);
         
         // Try to fetch as blob to avoid CORS issues
-        try {
-          const blobUrl = await fetchImageAsDataUrl(profilePictureUrl);
-          if (blobUrl) {
-            console.log("Successfully refreshed image as blob");
-            setProfilePicture(blobUrl);
-          } else {
-            console.log("Blob fetch failed for refresh, using direct URL");
-            setProfilePicture(profilePictureUrl);
-          }
-        } catch (error) {
-          console.log("Blob fetch failed for refresh, using direct URL:", error);
+        const blobUrl = await fetchProfilePictureAsBlob(data.data.profilePicture);
+        if (blobUrl) {
+          console.log("Successfully refreshed image as blob");
+          setProfilePicture(blobUrl);
+        } else {
+          console.log("Blob fetch failed for refresh, using direct URL");
+          const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
           setProfilePicture(profilePictureUrl);
         }
       } else {
