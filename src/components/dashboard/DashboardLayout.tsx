@@ -182,21 +182,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           console.log("Profile fetch - backend returned profilePicture:", data.data.profilePicture);
           const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
           console.log("Profile fetch - constructed URL:", profilePictureUrl);
-          
-          // Try to fetch as blob to avoid CORS issues
-          try {
-            const blobUrl = await fetchImageAsDataUrl(profilePictureUrl);
-            if (blobUrl) {
-              console.log("Successfully fetched image as blob");
-              setProfilePicture(blobUrl);
-            } else {
-              console.log("Blob fetch failed, using direct URL");
-              setProfilePicture(profilePictureUrl);
-            }
-          } catch (error) {
-            console.log("Blob fetch failed, using direct URL:", error);
-            setProfilePicture(profilePictureUrl);
-          }
+          setProfilePicture(profilePictureUrl);
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -281,26 +267,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         console.log("Upload response data:", data);
         console.log("Backend returned profilePicture:", data.data.profilePicture);
         
-        const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
-        console.log("Constructed profile picture URL:", profilePictureUrl);
+        // Create a preview URL for immediate display
+        const previewUrl = URL.createObjectURL(file);
+        setProfilePicture(previewUrl);
         
-        // Try to fetch as blob to avoid CORS issues
-        try {
-          const blobUrl = await fetchImageAsDataUrl(profilePictureUrl);
-          if (blobUrl) {
-            console.log("Successfully fetched uploaded image as blob");
-            setProfilePicture(blobUrl);
-          } else {
-            console.log("Blob fetch failed for upload, using direct URL");
-            setProfilePicture(profilePictureUrl);
-          }
-        } catch (error) {
-          console.log("Blob fetch failed for upload, using direct URL:", error);
-          setProfilePicture(profilePictureUrl);
+        // Cleanup previous blob URL
+        if (currentBlobUrl) {
+          URL.revokeObjectURL(currentBlobUrl);
         }
+        setCurrentBlobUrl(previewUrl);
         
         toast.success("Profile picture uploaded successfully!");
-        refreshProfilePicture(); // Refresh profile picture after successful upload
       } else {
         throw new Error(data.message || "Upload failed");
       }
@@ -342,7 +319,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         setProfilePicture(undefined);
         setImageLoadError(false);
         toast.success("Profile picture removed successfully!");
-        refreshProfilePicture(); // Refresh profile picture after successful removal
       } else {
         throw new Error(data.message || "Remove failed");
       }
