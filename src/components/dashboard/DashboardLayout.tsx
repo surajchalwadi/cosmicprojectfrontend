@@ -71,15 +71,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     
     // If the filename already includes 'uploads/', use it as is
     if (filename.includes('uploads/')) {
-      const url = `${FILE_BASE_URL}/${filename}`;
-      console.log("Using path with uploads:", url);
-      return url;
+      // Try multiple approaches to handle CORS
+      const possibleUrls = [
+        `${FILE_BASE_URL}/${filename}`,
+        `${API_BASE_URL}/profile/picture/${filename.split('/').pop()}`, // Try API endpoint
+        `${FILE_BASE_URL}/static/${filename}`,
+        `${FILE_BASE_URL}/public/${filename}`
+      ];
+      
+      const selectedUrl = possibleUrls[0];
+      console.log("Using path with uploads:", selectedUrl);
+      console.log("Alternative URLs available:", possibleUrls);
+      return selectedUrl;
     }
     
     // Try different possible endpoints for just filenames
     const possibleEndpoints = [
       `${FILE_BASE_URL}/uploads/${filename}`,
-      `${FILE_BASE_URL}/profile/picture/${filename}`,
+      `${API_BASE_URL}/profile/picture/${filename}`,
       `${FILE_BASE_URL}/static/uploads/${filename}`,
       `${FILE_BASE_URL}/images/${filename}`,
       `${FILE_BASE_URL}/public/uploads/${filename}`,
@@ -89,6 +98,28 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     const selectedUrl = possibleEndpoints[0];
     console.log("Selected URL:", selectedUrl);
     return selectedUrl;
+  };
+
+  // Function to fetch image as blob and convert to data URL to avoid CORS
+  const fetchImageAsDataUrl = async (url: string): Promise<string> => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error("Error fetching image as blob:", error);
+      return '';
+    }
   };
 
   // Test if an image URL is accessible
@@ -133,7 +164,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           console.log("Profile fetch - backend returned profilePicture:", data.data.profilePicture);
           const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
           console.log("Profile fetch - constructed URL:", profilePictureUrl);
-          setProfilePicture(profilePictureUrl);
+          
+          // Try to fetch as blob to avoid CORS issues
+          try {
+            const blobUrl = await fetchImageAsDataUrl(profilePictureUrl);
+            if (blobUrl) {
+              console.log("Successfully fetched image as blob");
+              setProfilePicture(blobUrl);
+            } else {
+              console.log("Blob fetch failed, using direct URL");
+              setProfilePicture(profilePictureUrl);
+            }
+          } catch (error) {
+            console.log("Blob fetch failed, using direct URL:", error);
+            setProfilePicture(profilePictureUrl);
+          }
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -175,7 +220,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
         console.log("Constructed profile picture URL:", profilePictureUrl);
         
-        setProfilePicture(profilePictureUrl);
+        // Try to fetch as blob to avoid CORS issues
+        try {
+          const blobUrl = await fetchImageAsDataUrl(profilePictureUrl);
+          if (blobUrl) {
+            console.log("Successfully fetched uploaded image as blob");
+            setProfilePicture(blobUrl);
+          } else {
+            console.log("Blob fetch failed for upload, using direct URL");
+            setProfilePicture(profilePictureUrl);
+          }
+        } catch (error) {
+          console.log("Blob fetch failed for upload, using direct URL:", error);
+          setProfilePicture(profilePictureUrl);
+        }
+        
         toast.success("Profile picture uploaded successfully!");
       } else {
         throw new Error(data.message || "Upload failed");
