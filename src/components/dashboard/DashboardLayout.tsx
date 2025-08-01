@@ -69,7 +69,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         });
         const data = await response.json();
         if (data.status === "success" && data.data.profilePicture) {
-          setProfilePicture(`${FILE_BASE_URL}/${data.data.profilePicture}`);
+          // Use API endpoint instead of direct file access to avoid CORS issues
+          setProfilePicture(`${API_BASE_URL}/profile/picture/${data.data.profilePicture}`);
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -94,7 +95,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       });
       const data = await response.json();
       if (data.status === "success") {
-        setProfilePicture(`${FILE_BASE_URL}/${data.data.profilePicture}`);
+        // Use API endpoint instead of direct file access to avoid CORS issues
+        setProfilePicture(`${API_BASE_URL}/profile/picture/${data.data.profilePicture}`);
       } else {
         throw new Error(data.message || "Failed to upload profile picture");
       }

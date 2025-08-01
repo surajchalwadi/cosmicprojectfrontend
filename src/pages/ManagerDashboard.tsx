@@ -122,6 +122,10 @@ const ManagerDashboard = () => {
     const res = await fetch(`${API_BASE_URL}/profile`, { headers });
     const data = await res.json();
     if (data.status === "success") {
+      // Update profile picture URL to use API endpoint to avoid CORS issues
+      if (data.data.profilePicture) {
+        data.data.profilePicture = `${API_BASE_URL}/profile/picture/${data.data.profilePicture}`;
+      }
       setUserProfile(data.data);
     }
   };
