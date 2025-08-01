@@ -56,6 +56,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [isSidebarOpen, setSidebarOpen] = React.useState(false);
   const [profilePicture, setProfilePicture] = React.useState(userProfilePicture);
   const [imageLoadError, setImageLoadError] = React.useState(false);
+  const [currentBlobUrl, setCurrentBlobUrl] = React.useState<string | null>(null);
+
+  // Cleanup blob URLs when component unmounts or when profile picture changes
+  React.useEffect(() => {
+    return () => {
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+      }
+    };
+  }, [currentBlobUrl]);
 
   // Utility function to construct profile picture URL
   const constructProfilePictureUrl = (filename: string): string => {
@@ -115,7 +125,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
       
       const blob = await response.blob();
-      return URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Cleanup previous blob URL
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+      }
+      
+      setCurrentBlobUrl(blobUrl);
+      return blobUrl;
     } catch (error) {
       console.error("Error fetching image as blob:", error);
       return '';
@@ -188,6 +206,52 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     fetchUserProfile();
   }, []);
 
+  // Function to refresh profile picture
+  const refreshProfilePicture = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      console.log("Refresh profile response:", data);
+      
+      if (data.status === "success" && data.data.profilePicture) {
+        console.log("Refresh - backend returned profilePicture:", data.data.profilePicture);
+        const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
+        console.log("Refresh - constructed URL:", profilePictureUrl);
+        
+        // Try to fetch as blob to avoid CORS issues
+        try {
+          const blobUrl = await fetchImageAsDataUrl(profilePictureUrl);
+          if (blobUrl) {
+            console.log("Successfully refreshed image as blob");
+            setProfilePicture(blobUrl);
+          } else {
+            console.log("Blob fetch failed for refresh, using direct URL");
+            setProfilePicture(profilePictureUrl);
+          }
+        } catch (error) {
+          console.log("Blob fetch failed for refresh, using direct URL:", error);
+          setProfilePicture(profilePictureUrl);
+        }
+      } else {
+        // No profile picture, clear it
+        if (currentBlobUrl) {
+          URL.revokeObjectURL(currentBlobUrl);
+          setCurrentBlobUrl(null);
+        }
+        setProfilePicture(undefined);
+      }
+    } catch (error) {
+      console.error("Error refreshing profile picture:", error);
+    }
+  };
+
   // Use onProfilePictureUpload if provided, otherwise fallback to local upload logic
   const handleProfilePictureUpload = onProfilePictureUpload || (async (file: File) => {
     try {
@@ -236,6 +300,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         }
         
         toast.success("Profile picture uploaded successfully!");
+        refreshProfilePicture(); // Refresh profile picture after successful upload
       } else {
         throw new Error(data.message || "Upload failed");
       }
@@ -268,8 +333,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
 
       if (data.status === "success") {
+        // Cleanup blob URL
+        if (currentBlobUrl) {
+          URL.revokeObjectURL(currentBlobUrl);
+          setCurrentBlobUrl(null);
+        }
+        
         setProfilePicture(undefined);
+        setImageLoadError(false);
         toast.success("Profile picture removed successfully!");
+        refreshProfilePicture(); // Refresh profile picture after successful removal
       } else {
         throw new Error(data.message || "Remove failed");
       }
