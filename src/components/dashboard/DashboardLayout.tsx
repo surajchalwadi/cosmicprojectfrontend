@@ -61,8 +61,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const constructProfilePictureUrl = (filename: string): string => {
     if (!filename) return '';
     
+    console.log("Constructing URL for filename:", filename);
+    
     // If it's already a full URL, return as is
     if (filename.startsWith('http')) {
+      console.log("Using full URL:", filename);
       return filename;
     }
     
@@ -71,11 +74,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       `${API_BASE_URL}/uploads/${filename}`,
       `${API_BASE_URL}/profile/picture/${filename}`,
       `${API_BASE_URL}/static/uploads/${filename}`,
-      `${API_BASE_URL}/images/${filename}`
+      `${API_BASE_URL}/images/${filename}`,
+      `${API_BASE_URL}/public/uploads/${filename}`,
+      `${API_BASE_URL}/files/${filename}`
     ];
     
-    // For now, use the first one as default
-    return possibleEndpoints[0];
+    const selectedUrl = possibleEndpoints[0];
+    console.log("Selected URL:", selectedUrl);
+    return selectedUrl;
+  };
+
+  // Test if an image URL is accessible
+  const testImageUrl = async (url: string): Promise<boolean> => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
+    } catch (error) {
+      console.warn(`Image URL test failed for ${url}:`, error);
+      return false;
+    }
   };
 
   // Handle image load error
@@ -87,6 +104,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   // Handle image load success
   const handleImageLoad = () => {
+    console.log("Profile picture loaded successfully");
     setImageLoadError(false);
   };
 
@@ -103,8 +121,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           },
         });
         const data = await response.json();
+        console.log("Profile fetch response:", data);
         if (data.status === "success" && data.data.profilePicture) {
+          console.log("Profile fetch - backend returned profilePicture:", data.data.profilePicture);
           const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
+          console.log("Profile fetch - constructed URL:", profilePictureUrl);
           setProfilePicture(profilePictureUrl);
         }
       } catch (error) {
@@ -141,7 +162,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
 
       if (data.status === "success") {
+        console.log("Upload response data:", data);
+        console.log("Backend returned profilePicture:", data.data.profilePicture);
+        
         const profilePictureUrl = constructProfilePictureUrl(data.data.profilePicture);
+        console.log("Constructed profile picture URL:", profilePictureUrl);
+        
         setProfilePicture(profilePictureUrl);
         toast.success("Profile picture uploaded successfully!");
       } else {
