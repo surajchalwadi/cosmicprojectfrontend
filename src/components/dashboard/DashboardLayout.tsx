@@ -69,7 +69,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       return filename;
     }
     
-    // Try different possible endpoints
+    // If the filename already includes 'uploads/', use it as is
+    if (filename.includes('uploads/')) {
+      const url = `${API_BASE_URL}/${filename}`;
+      console.log("Using path with uploads:", url);
+      return url;
+    }
+    
+    // Try different possible endpoints for just filenames
     const possibleEndpoints = [
       `${API_BASE_URL}/uploads/${filename}`,
       `${API_BASE_URL}/profile/picture/${filename}`,
