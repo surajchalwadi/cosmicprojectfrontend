@@ -109,9 +109,17 @@ const SuperAdminDashboard = () => {
     const res = await fetch(`${API_BASE_URL}/profile`, { headers });
     const data = await res.json();
     if (data.status === "success") {
-      // Update profile picture URL to use API endpoint to avoid CORS issues
+      // Handle different backend response formats
       if (data.data.profilePicture) {
-        data.data.profilePicture = `${API_BASE_URL}/profile/picture/${data.data.profilePicture}`;
+        let profilePictureUrl = data.data.profilePicture;
+        
+        // If it's just a filename, construct the full URL
+        if (!profilePictureUrl.startsWith('http')) {
+          // Try different possible endpoints
+          profilePictureUrl = `${API_BASE_URL}/uploads/${data.data.profilePicture}`;
+        }
+        
+        data.data.profilePicture = profilePictureUrl;
       }
       setUserProfile(data.data);
     }
@@ -142,9 +150,17 @@ const SuperAdminDashboard = () => {
       }
 
       if (data.status === "success") {
-        // Update the profile picture URL to use API endpoint
+        // Handle different backend response formats
         if (data.data.profilePicture) {
-          data.data.profilePicture = `${API_BASE_URL}/profile/picture/${data.data.profilePicture}`;
+          let profilePictureUrl = data.data.profilePicture;
+          
+          // If it's just a filename, construct the full URL
+          if (!profilePictureUrl.startsWith('http')) {
+            // Try different possible endpoints
+            profilePictureUrl = `${API_BASE_URL}/uploads/${data.data.profilePicture}`;
+          }
+          
+          data.data.profilePicture = profilePictureUrl;
         }
         setUserProfile(data.data);
         toast.success("Profile picture uploaded successfully!");

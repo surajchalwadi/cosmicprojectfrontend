@@ -70,8 +70,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         });
         const data = await response.json();
         if (data.status === "success" && data.data.profilePicture) {
-          // Use API endpoint instead of direct file access to avoid CORS issues
-          setProfilePicture(`${API_BASE_URL}/profile/picture/${data.data.profilePicture}`);
+          // Handle different backend response formats
+          let profilePictureUrl = data.data.profilePicture;
+          
+          // If it's just a filename, construct the full URL
+          if (!profilePictureUrl.startsWith('http')) {
+            // Try different possible endpoints
+            profilePictureUrl = `${API_BASE_URL}/uploads/${data.data.profilePicture}`;
+          }
+          
+          setProfilePicture(profilePictureUrl);
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -107,8 +115,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
 
       if (data.status === "success") {
-        // Use API endpoint instead of direct file access to avoid CORS issues
-        setProfilePicture(`${API_BASE_URL}/profile/picture/${data.data.profilePicture}`);
+        // Handle different backend response formats
+        let profilePictureUrl = data.data.profilePicture;
+        
+        // If it's just a filename, construct the full URL
+        if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
+          // Try different possible endpoints
+          profilePictureUrl = `${API_BASE_URL}/uploads/${data.data.profilePicture}`;
+        }
+        
+        setProfilePicture(profilePictureUrl);
         toast.success("Profile picture uploaded successfully!");
       } else {
         throw new Error(data.message || "Upload failed");
