@@ -15,8 +15,7 @@ import TechnicianDashboard from "./pages/TechnicianDashboard";
 import NotFound from "./pages/NotFound";
 import MyProjectsPage from "./pages/Myprojects";
 import TasksPage from "./pages/task"; // Removed duplicate import
-import TechnicianReports from "./pages/TechnicianReports";
-import TechnicianTasks from "./pages/TechnicianTasks";
+
 import ManagerTechniciansPage from "./pages/ManagerTechniciansPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from 'react-hot-toast';
@@ -115,22 +114,6 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={["technician"]}>
                     <TechnicianDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/technician/tasks"
-                element={
-                  <ProtectedRoute allowedRoles={["technician"]}>
-                    <TechnicianTasks />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/technician/reports"
-                element={
-                  <ProtectedRoute allowedRoles={["technician"]}>
-                    <TechnicianReports />
                   </ProtectedRoute>
                 }
               />

@@ -431,8 +431,8 @@ const TechnicianDashboard = () => {
               Dashboard
             </h1>
             <p className="text-muted-foreground mt-1 mobile-text-base">
-              Welcome to your technician dashboard. Access your tasks and
-              reports from the navigation menu.
+              Welcome to your technician dashboard. View and manage all your tasks, 
+              update their status, and submit reports directly from here.
             </p>
           </div>
         </div>
@@ -483,7 +483,7 @@ const TechnicianDashboard = () => {
                   <h3 className="mobile-empty-state-title">No tasks found</h3>
                   <p className="mobile-empty-state-description">
                     {allTasks.length === 0
-                      ? "No tasks have been assigned to you yet. You can view or submit your tasks and reports using the navigation menu."
+                      ? "No tasks have been assigned to you yet. Check back later for new assignments."
                       : "No tasks match your current filters."}
                   </p>
                 </div>

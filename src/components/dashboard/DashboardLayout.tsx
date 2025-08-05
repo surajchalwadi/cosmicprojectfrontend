@@ -434,8 +434,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       color: "bg-green-600 text-white",
       navigation: [
         { title: "Dashboard", href: "/technician", icon: LayoutDashboard },
-        { title: "Tasks", href: "/technician/tasks", icon: ClipboardList },
-        { title: "Reports", href: "/technician/reports", icon: FileText },
       ],
     },
   };
